@@ -11,7 +11,7 @@ GUI Interface to work with MTpy for visualizing and manipulating data and models
 - Visualize a data set in map view
   - Apparent resitivity and phase maps per period
   - Phase tensor ellipses with induction vectors per period
-    - Would be nice to scale these by penetration depth
+   - Would be nice to scale these by penetration depth
   - Depth of penetration
 - Create model data and mesh files from transfer function files and MTH5's
   - ModEM
@@ -19,21 +19,27 @@ GUI Interface to work with MTpy for visualizing and manipulating data and models
   - Mare2DEM
   - Occam?
   - Others
-- Visualize model results: Data
+- Visualize and manipulate model results: Data
   - Per station apparent resistivity, phase, tipper
   - Phase tensor maps + residual
   - Misfits 
-    - Statistics (histograms)
-      - Per period
-      - Per station
-      - Per component
+   - Statistics (histograms)
+    - Per period
+    - Per station
+    - Per component
     - Map view per period per component
- - Visualize model results: Model
+ - Visualize and manipulate model results: Model
    - Profiles
    - Depth slices
    - 3D views
-     - Cut profiles
-     - Isosurfaces
-     - Cropping
+    - Cut profiles
+    - Isosurfaces
+    - Cropping
+ - Create model output files
+  - VTK
+  - Geosoft Grids
+  - Ascii Grids
+  - Geotiffs
+  - NetCDF 
      
   
