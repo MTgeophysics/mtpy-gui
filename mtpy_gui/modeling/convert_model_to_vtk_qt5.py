@@ -27,7 +27,8 @@ class ConvertModel2VTK(QtWidgets.QWidget):
     """
     
     """
-
+    closed = QtCore.pyqtSignal()
+    
     def __init__(self):
         super(ConvertModel2VTK, self).__init__()
 
@@ -209,6 +210,9 @@ class ConvertModel2VTK(QtWidgets.QWidget):
         self.output_box.moveCursor(QtGui.QTextCursor.End)
         self.output_box.insertPlainText(message)
 
+    def closeEvent(self, event):
+        self.closed.emit()
+        QtWidgets.QWidget.closeEvent(self, event)
 
 # ==============================================================================
 # create main

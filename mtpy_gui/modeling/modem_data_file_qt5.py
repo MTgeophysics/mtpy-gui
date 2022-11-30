@@ -21,9 +21,16 @@ except ImportError:
 
 
 class ModEMDataFile(QtWidgets.QWidget):
+    closed = QtCore.pyqtSignal()
+
+    
     """
     Widget to build a data file
     
     """
 
     pass
+    
+    #def closeEvent(self, event):
+    #    self.closed.emit()
+    #    QtWidgets.QMainWindow.closeEvent(self, event)

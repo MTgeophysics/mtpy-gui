@@ -34,7 +34,8 @@ class ModEMPlotResponse(QtWidgets.QMainWindow):
     """
     main window
     """
-
+    closed = QtCore.pyqtSignal()
+    
     def __init__(self):
         super(ModEMPlotResponse, self).__init__()
 
@@ -363,6 +364,10 @@ class ModEMPlotResponse(QtWidgets.QMainWindow):
         help_string = "\n".join(ll)
 
         QtWidgets.QMessageBox.information(self.centralWidget, "Help", help_string)
+        
+    def closeEvent(self, event):
+        self.closed.emit()
+        QtWidgets.QMainWindow.closeEvent(self, event)
 
 
 # ==============================================================================

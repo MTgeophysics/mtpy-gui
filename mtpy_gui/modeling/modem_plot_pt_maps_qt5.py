@@ -17,7 +17,10 @@ import numpy as np
 try:
     from PyQt5 import QtCore, QtGui, QtWidgets
 except ImportError:
-    raise ImportError("This version needs PyQt5")
+    try:
+        import PyQt5.QtCore as QtCore, PyQt5.QtGui, PyQt5.QtWidgets
+    except ImportError:
+        raise ImportError("This version needs PyQt5")
 
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -66,6 +69,8 @@ except AttributeError:
 class ModEMPlotPTMap(
     QtWidgets.QMainWindow, mtplottools.MTArrows, mtplottools.MTEllipse
 ):
+    closed = QtCore.pyqtSignal()
+    
     def __init__(self):
 
         super(ModEMPlotPTMap, self).__init__()
@@ -1193,6 +1198,11 @@ class ModEMPlotPTMap(
 
         # draw plot
         self.mpl_widget.draw()
+        
+        
+    def closeEvent(self, event):
+        self.closed.emit()
+        QtWidgets.QMainWindow.closeEvent(self, event)
 
 
 class PlotSettings(QtWidgets.QWidget):

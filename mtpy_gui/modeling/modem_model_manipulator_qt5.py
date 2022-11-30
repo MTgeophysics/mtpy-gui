@@ -33,9 +33,12 @@ import mtpy.modeling.modem as modem
 # Main Window
 # ==============================================================================
 class ModEM_Model_Manipulator(QtWidgets.QMainWindow):
+    #class ModEM_Model_Manipulator(QtCore.QObject):
     """
-    main window for manipulating a model
+    object for manipulating a model
     """
+    
+    closed = QtCore.pyqtSignal()
 
     def __init__(self):
         super(ModEM_Model_Manipulator, self).__init__()
@@ -48,34 +51,39 @@ class ModEM_Model_Manipulator(QtWidgets.QMainWindow):
         # window basics
         self.setWindowTitle("Manipulate ModEM Model")
         self.setWindowState(QtCore.Qt.WindowMaximized)
-
-        self.central_widget = self.setCentralWidget(self.model_widget)
-
+        
         # -------------- MENU BAR ---------------------------------
         # add a menu bar to the top of the window
-        self.menu_data_file = self.menuBar().addMenu("Data &File")
+        self.menu_bar = self.menuBar()
+        
+        self.menu_data_file = self.menu_bar.addMenu("Data &File")
         self.menu_data_open_action = self.menu_data_file.addAction("Open")
         self.menu_data_open_action.triggered.connect(self.get_data_fn)
 
-        self.menu_model_file = self.menuBar().addMenu("&Model File")
+        self.menu_model_file = self.menu_bar.addMenu("&Model File")
         self.menu_model_open_action = self.menu_model_file.addAction("Open")
         self.menu_model_open_action.triggered.connect(self.get_model_fn)
 
         self.menu_model_save_action = self.menu_model_file.addAction("Save")
         self.menu_model_save_action.triggered.connect(self.save_model_fn)
 
-        self.menu_properties = self.menuBar().addMenu("Properties")
+        self.menu_properties = self.menu_bar.addMenu("Properties")
         self.menu_properties_cb_action = self.menu_properties.addAction(
             "Resistivity Limits"
         )
         self.menu_properties_cb_action.triggered.connect(self.set_res_limits)
 
-        self.menu_tools = self.menuBar().addMenu("Tools")
+        self.menu_tools = self.menu_bar.addMenu("Tools")
         self.menu_tools_pad_action = self.menu_tools.addAction("Pad Fill")
         self.menu_tools_pad_action.triggered.connect(self.pad_fill)
         self.menu_tools_smooth_action = self.menu_tools.addAction("Smooth")
         self.menu_tools_smooth_action.triggered.connect(self.smooth)
 
+        
+        #set central widget 
+        self.central_widget = self.setCentralWidget(self.model_widget)
+        
+        #connect slots 
         QtCore.QMetaObject.connectSlotsByName(self)
 
     def get_data_fn(self):
@@ -147,6 +155,9 @@ class ModEM_Model_Manipulator(QtWidgets.QMainWindow):
     def smooth(self):
         self.model_widget.set_smooth_params()
 
+    def closeEvent(self, event):
+        self.closed.emit()
+        QtWidgets.QMainWindow.closeEvent(self, event)
 
 # =============================================================================
 # Resistivity limits widget
@@ -1687,5 +1698,5 @@ def main():
 
 
 if __name__ == "__main__":
-
+    print('\n\n\nFIND ME \n\n\n')
     main()
