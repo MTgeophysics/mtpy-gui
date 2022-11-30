@@ -1198,11 +1198,6 @@ class ModEMPlotPTMap(
 
         # draw plot
         self.mpl_widget.draw()
-        
-        
-    def closeEvent(self, event):
-        self.closed.emit()
-        QtWidgets.QMainWindow.closeEvent(self, event)
 
 
 class PlotSettings(QtWidgets.QWidget):

@@ -31,6 +31,6 @@ class ModEMDataFile(QtWidgets.QWidget):
 
     pass
     
-    #def closeEvent(self, event):
-    #    self.closed.emit()
-    #    QtWidgets.QMainWindow.closeEvent(self, event)
+    def closeEvent(self, event):
+        self.closed.emit()
+        QtWidgets.QMainWindow.closeEvent(self, event)

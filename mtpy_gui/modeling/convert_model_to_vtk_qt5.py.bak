@@ -212,7 +212,7 @@ class ConvertModel2VTK(QtWidgets.QWidget):
 
     def closeEvent(self, event):
         self.closed.emit()
-        QtWidgets.QWidget.closeEvent(self, event)
+        QtWidgets.QMainWindow.closeEvent(self, event)
 
 # ==============================================================================
 # create main
