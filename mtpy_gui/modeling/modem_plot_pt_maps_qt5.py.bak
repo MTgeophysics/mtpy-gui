@@ -415,7 +415,7 @@ class ModEMPlotPTMap(
         put pt parameters into something useful for plotting
         """
         if self.modem_data is None: 
-            self.get_data_fn()
+            self.get_
         
         ns = len(list(self.modem_data.mt_dict.keys()))
         nf = len(self.modem_data.period_list)
