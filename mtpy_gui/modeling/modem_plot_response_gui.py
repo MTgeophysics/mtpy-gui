@@ -29,7 +29,7 @@ from matplotlib.figure import Figure
 import matplotlib.gridspec as gridspec
 import matplotlib.widgets as mplwidgets
 
-import mtpy.imaging.mtplottools as mtplottools
+import mtpy.imaging.mtplot_tools as mtplottools
 import mtpy.modeling.modem as modem
 from .response_plot_settings import PlotSettings
 

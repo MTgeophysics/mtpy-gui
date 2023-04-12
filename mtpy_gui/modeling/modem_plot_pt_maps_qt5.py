@@ -34,12 +34,14 @@ import matplotlib.colors as colors
 from matplotlib import cm
 
 import mtpy.modeling.modem as modem
-import mtpy.imaging.mtplottools as mtplottools
-import mtpy.analysis.pt as mtpt
+import mtpy.imaging.mtplot_tools as mtplottools
+#import mtpy.analysis.pt as mtpt
+import mtpy.analysis.residual_phase_tensor as mtpt
 import mtpy.utils.exceptions as mtex
 
 import mtpy.imaging.mtcolors as mtcl
-import mtpy.analysis.niblettbostick as mtnb
+#import mtpy.analysis.niblettbostick as mtnb
+import mtpy.core.transfer_function.z_analysis.niblettbostick as mtnb
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -306,7 +308,8 @@ class ModEMPlotPTMap(
                 caption="Choose ModEM data file", filter="(*.dat);; (*.data)"
             )[0]
         )
-
+        if fn=='':
+            return 
         fn = os.path.abspath(fn)
 
         self.modem_data = modem.Data()
@@ -349,6 +352,8 @@ class ModEMPlotPTMap(
                 directory=self.dir_path,
             )[0]
         )
+        if fn=='':
+            return 
         fn = os.path.abspath(fn)
         self.modem_model = modem.Model()
         self.modem_model.read_model_file(fn)
@@ -376,7 +381,8 @@ class ModEMPlotPTMap(
                 directory=self.dir_path,
             )[0]
         )
-
+        if fn=='':
+            return 
         self.modem_resp = modem.Data()
         self.modem_resp.read_data_file(fn)
         self.modem_resp_fn = fn
@@ -387,7 +393,7 @@ class ModEMPlotPTMap(
         """
         show setting window
         """
-        self.settings_window = PlotSettings(None, **self.__dict__)
+        self.settings_window = PlotSettingsWindow(None, **self.__dict__)
         self.settings_window.show()
         self.settings_window.settings_updated.connect(self.update_settings)
 
@@ -583,7 +589,8 @@ class ModEMPlotPTMap(
         #        print self.modem_data.mt_dict[self.modem_data.mt_dict.keys()[0]].Z.z
         for ii, mt_key in enumerate(sorted(self.modem_data.mt_dict.keys())):
             mt_obj = self.modem_data.mt_dict[mt_key]
-            d_arr = mtnb.calculate_depth_nb(z_object=mt_obj.Z)
+            #d_arr = mtnb.calculate_depth_nb(z_object=mt_obj.Z)
+            d_arr = mtnb.calculate_depth_of_investigation(z_object=mt_obj.Z)
 
             d_arr_min[:, ii] = d_arr["depth_min"]
             d_arr_max[:, ii] = d_arr["depth_max"]
@@ -1210,12 +1217,16 @@ class ModEMPlotPTMap(
         QtWidgets.QMainWindow.closeEvent(self, event)
 
 
-class PlotSettings(QtWidgets.QWidget):
+class PlotSettingsWindow(QtWidgets.QWidget):
     settings_updated = QtCore.pyqtSignal()
 
     def __init__(self, parent, **kwargs):
-        super(PlotSettings, self).__init__(parent)
-
+        super(PlotSettingsWindow, self).__init__(parent)
+        
+        filtered = {k: v for k, v in kwargs.items() if v is not None}
+        kwargs.clear()
+        kwargs.update(filtered)
+        
         self.font_size = kwargs.pop("font_size", 10)
 
         self.map_scale = kwargs.pop("map_scale", "km")

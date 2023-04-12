@@ -379,12 +379,12 @@ class MyMainWindow(MainWindow):
             nx = config['nx']
             ny = config['ny']
             
-            p1x = config['p1x']
-            p1y = config['p1y']
-            p2x = config['p2x']
-            p2y = config['p2y']
-            z_top = config['z_top']
-            z_bot = config['z_bot']
+            p1x = float(config['p1x'])
+            p1y = float(config['p1y'])
+            p2x = float(config['p2x'])
+            p2y = float(config['p2y'])
+            z_top = float(config['z_top'])
+            z_bot = float(config['z_bot'])
             
             ll = np.array([p1x, p1y, z_bot])
             lr = np.array([p2x, p2y, z_bot])
