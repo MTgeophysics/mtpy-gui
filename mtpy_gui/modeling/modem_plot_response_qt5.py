@@ -22,10 +22,10 @@ try:
 except ImportError:
     raise ImportError("This version needs PyQt5")
 
-from mtpy.gui.modem_plot_response_gui import PlotResponses
-from mtpy.gui.response_plot_settings import PlotSettings
-from mtpy.gui.get_stations import GetStations
-from mtpy.gui.plot_stations import PlotStations
+from mtpy_gui.modeling.modem_plot_response_gui import PlotResponses
+from mtpy_gui.modeling.response_plot_settings import PlotSettings
+from mtpy_gui.modeling.get_stations import GetStations
+from mtpy_gui.modeling.plot_stations import PlotStations
 
 # ==============================================================================
 
@@ -141,11 +141,11 @@ class ModEMPlotResponse(QtWidgets.QMainWindow):
         self.menu_plot_type.addAction(self.action_plot_rp)
         self.action_plot_rp.toggled.connect(self.status_checked_ptrp)
 
-        self.action_plot_settings = QtWidgets.QAction(self)
-        self.action_plot_settings.setText("Settings")
-        self.action_plot_settings.triggered.connect(self.show_settings)
-        self.menu_display.addAction(self.action_plot_settings)
-        self.menubar.addAction(self.menu_display.menuAction())
+        #self.action_plot_settings = QtWidgets.QAction(self)
+        #self.action_plot_settings.setText("Settings")
+        #self.action_plot_settings.triggered.connect(self.show_settings)
+        #self.menu_display.addAction(self.action_plot_settings)
+        #self.menubar.addAction(self.menu_display.menuAction())
 
         self.menu_display.addAction(self.menu_plot_type.menuAction())
 
@@ -333,16 +333,17 @@ class ModEMPlotResponse(QtWidgets.QMainWindow):
         self.plot_response.resp_fn = fn
 
     def show_settings(self):
-        self.settings_window = PlotSettings(**self.__dict__)
-        self.settings_window.show()
-        self.settings_window.settings_updated.connect(self.update_settings)
+        return 
+        #self.settings_window = PlotSettings(**self.__dict__)
+        #self.settings_window.show()
+        #self.settings_window.settings_updated.connect(self.update_settings)
 
-    def update_settings(self):
-
-        for attr in sorted(self.settings_window.__dict__.keys()):
-            setattr(self, attr, self.settings_window.__dict__[attr])
-
-        self.plot()
+    #def update_settings(self):
+    #
+    #    for attr in sorted(self.settings_window.__dict__.keys()):
+    #        setattr(self, attr, self.settings_window.__dict__[attr])
+    #
+    #    self.plot()
 
     def disp_help(self):
         """
@@ -368,6 +369,10 @@ class ModEMPlotResponse(QtWidgets.QMainWindow):
     def closeEvent(self, event):
         self.closed.emit()
         QtWidgets.QMainWindow.closeEvent(self, event)
+
+
+
+
 
 
 # ==============================================================================

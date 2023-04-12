@@ -19,7 +19,7 @@ Created on Mon Nov 29 09:27:13 2022
 #TODO mtpy setup: matplotlib 3.5 required 
 #TODO mtpy setup: gdal is required 
 
-__version__ = '0.0.1'
+__version__ = '0.0.2'
 
 
 def checkCommandArguments():

@@ -4,6 +4,8 @@ from PyQt5.QtGui import *
 
 from mtpy_gui.__init__ import __version__ as gui_version
 
+from obspy.core import inventory
+
 import mtpy as mtpy
 
 #import modules. Issues with pyQt or other will be flagged here. 
@@ -13,6 +15,10 @@ import mtpy_gui.modeling.modem_model_manipulator_qt5 as modem_model_manipulator
 import mtpy_gui.modeling.modem_plot_pt_maps_qt5 as modem_plot_pt_maps
 import mtpy_gui.modeling.modem_plot_response_qt5 as modem_plot_response
 import mtpy_gui.modeling.view_vtk_qt5 as view_vtk
+
+import mtpy_gui.modeling.mt_editor_qt5 as mt_editor
+#import mtpy_gui.modeling.occam1d_gui_qt5 as occam1d_gui
+
 
 from matplotlib import pyplot as plt
 import qdarkstyle
@@ -69,7 +75,10 @@ class mainScrollArea(QScrollArea):
         data = [
             {"title": "Data Manipulation",
             "buttons": 
-                [{"text": "Modem Data File",
+                [{"text": "MT Editor",
+                "path_icon": "SP_DirHomeIcon", 
+                'func': lambda: app.sigOpenModule.emit({"type":"mt_editor"})},
+                {"text": "Modem Data File",
                 "path_icon": "SP_DirHomeIcon", 
                 'func': lambda: app.sigOpenModule.emit({"type":"modem_data_file"})},
                 {"text": "Modem Plot Pt Maps",
@@ -91,6 +100,10 @@ class mainScrollArea(QScrollArea):
                 {"text": "VTK Viewer",
                 "path_icon": "SP_DirHomeIcon", 
                 'func': lambda: app.sigOpenModule.emit({"type":"view_3d"})}]}]
+        
+        #{"text": "Occam 1D",
+                #"path_icon": "SP_DirHomeIcon", 
+                #'func': lambda: app.sigOpenModule.emit({"type":"occam_1d"})}]},
         
         for val in data:
             gb = QGroupBox()
@@ -172,6 +185,10 @@ class landingPage(QMainWindow):
             newWin= model_to_vtk.ConvertModel2VTK()
         elif t=="view_3d":
             newWin= view_vtk.MyMainWindow()
+        elif t=="mt_editor":
+            newWin= mt_editor.EDI_Editor_Window()
+        #elif t=="occam_1d":
+        #    newWin= occam1d_gui.Occam1D_GUI()
         else:
             print('Unexpected window type: %s'%t)
 
