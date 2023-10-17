@@ -22,10 +22,11 @@ try:
 except ImportError:
     raise ImportError("This version needs PyQt5")
 
-from mtpy_gui.modeling.modem_plot_response_gui import PlotResponses
-from mtpy_gui.modeling.response_plot_settings import PlotSettings
-from mtpy_gui.modeling.get_stations import GetStations
-from mtpy_gui.modeling.plot_stations import PlotStations
+from mtpy.gui.modem_plot_response_gui import PlotResponses
+from mtpy.gui.response_plot_settings import PlotSettings
+from mtpy.gui.get_stations import GetStations
+from mtpy.gui.plot_stations import PlotStations
+
 
 # ==============================================================================
 
@@ -34,8 +35,7 @@ class ModEMPlotResponse(QtWidgets.QMainWindow):
     """
     main window
     """
-    closed = QtCore.pyqtSignal()
-    
+
     def __init__(self):
         super(ModEMPlotResponse, self).__init__()
 
@@ -141,11 +141,11 @@ class ModEMPlotResponse(QtWidgets.QMainWindow):
         self.menu_plot_type.addAction(self.action_plot_rp)
         self.action_plot_rp.toggled.connect(self.status_checked_ptrp)
 
-        #self.action_plot_settings = QtWidgets.QAction(self)
-        #self.action_plot_settings.setText("Settings")
-        #self.action_plot_settings.triggered.connect(self.show_settings)
-        #self.menu_display.addAction(self.action_plot_settings)
-        #self.menubar.addAction(self.menu_display.menuAction())
+        self.action_plot_settings = QtWidgets.QAction(self)
+        self.action_plot_settings.setText("Settings")
+        self.action_plot_settings.triggered.connect(self.show_settings)
+        self.menu_display.addAction(self.action_plot_settings)
+        self.menubar.addAction(self.menu_display.menuAction())
 
         self.menu_display.addAction(self.menu_plot_type.menuAction())
 
@@ -201,31 +201,48 @@ class ModEMPlotResponse(QtWidgets.QMainWindow):
         fn = Path(
             str(
                 fn_dialog.getOpenFileName(
-                    caption="Choose ModEM data file", filter="(*.dat);; (*.data)"
+                    caption="Choose ModEM data file",
+                    filter="(*.dat);; (*.data)",
                 )[0]
             )
         )
 
         self.plot_response.data_fn = fn
         self.dir_path = fn.parent
-        
-        self.station_plot = PlotStations(self.plot_response.modem_data.station_locations)
+
+        self.station_plot = PlotStations(
+            self.plot_response.modem_data.station_locations
+        )
         self.station_plot.plot()
-        
+
         self.station_plot.show()
         self.station_plot.stationChanged.connect(self.station_picked)
-        
-        self.plot_response.list_widget.currentItemChanged.connect(self.update_station_map)
-        
+
+        self.plot_response.list_widget.currentItemChanged.connect(
+            self.update_station_map
+        )
+
     def update_station_map(self, widget_item):
+        print(f"{'='*10}{self.plot_response.station}{'='*10}")
         self.station_plot.previous_index = int(self.station_plot.current_index)
-        self.station_plot.current_index = int(np.where(self.plot_response.modem_data.station_locations.station == self.plot_response.station)[0][0])
+        self.station_plot.current_index = int(
+            np.where(
+                (
+                    self.plot_response.modem_data.station_locations.survey
+                    == self.plot_response.station.split(".")[0]
+                )
+                & (
+                    self.plot_response.modem_data.station_locations.station
+                    == self.plot_response.station.split(".")[1]
+                )
+            )[0][0]
+        )
         self.station_plot.plot_new_station()
-        
+
     def station_picked(self):
         self.plot_response.station = self.station_plot.current_station
         self.plot_response.plot()
-        
+
     def save_edits(self):
         """
         save edits to another file
@@ -271,7 +288,9 @@ class ModEMPlotResponse(QtWidgets.QMainWindow):
         self.plot_response.modem_data.mt_dict = new_dict
 
         # fill list of stations
-        station_list = list(sorted(self.plot_response.modem_data.mt_dict.keys()))
+        station_list = list(
+            sorted(self.plot_response.modem_data.mt_dict.keys())
+        )
         self.plot_response.list_widget.clear()
         for station in station_list:
             self.plot_response.list_widget.addItem(station)
@@ -280,8 +299,10 @@ class ModEMPlotResponse(QtWidgets.QMainWindow):
             self.plot_response.station = station_list[0]
 
         self.plot_response.plot()
-        
-        self.station_plot.redraw_plot(self.plot_response.modem_data.station_locations)
+
+        self.station_plot.redraw_plot(
+            self.plot_response.modem_data.station_locations
+        )
 
     def remove_station(self):
         """
@@ -293,7 +314,9 @@ class ModEMPlotResponse(QtWidgets.QMainWindow):
         """
 
         rs = GetStations(
-            stations=list(self.plot_response.modem_data.station_locations.station)
+            stations=list(
+                self.plot_response.modem_data.station_locations.station
+            )
         )
         rs.exec_()
 
@@ -304,7 +327,9 @@ class ModEMPlotResponse(QtWidgets.QMainWindow):
         self.plot_response.modem_data.mt_dict = new_mtdict
 
         # fill list of stations
-        station_list = list(sorted(self.plot_response.modem_data.mt_dict.keys()))
+        station_list = list(
+            sorted(self.plot_response.modem_data.mt_dict.keys())
+        )
         self.plot_response.list_widget.clear()
         for station in station_list:
             self.plot_response.list_widget.addItem(station)
@@ -313,8 +338,10 @@ class ModEMPlotResponse(QtWidgets.QMainWindow):
             self.plot_response.station = station_list[0]
 
         self.plot_response.plot()
-        
-        self.station_plot.redraw_plot(self.plot_response.modem_data.station_locations)
+
+        self.station_plot.redraw_plot(
+            self.plot_response.modem_data.station_locations
+        )
 
     def get_resp_fn(self):
         """
@@ -325,7 +352,8 @@ class ModEMPlotResponse(QtWidgets.QMainWindow):
         fn = Path(
             str(
                 fn_dialog.getOpenFileName(
-                    caption="Choose ModEM response file", filter="(*.dat);; (*.data)"
+                    caption="Choose ModEM response file",
+                    filter="(*.dat);; (*.data)",
                 )[0]
             )
         )
@@ -333,17 +361,16 @@ class ModEMPlotResponse(QtWidgets.QMainWindow):
         self.plot_response.resp_fn = fn
 
     def show_settings(self):
-        return 
-        #self.settings_window = PlotSettings(**self.__dict__)
-        #self.settings_window.show()
-        #self.settings_window.settings_updated.connect(self.update_settings)
+        self.settings_window = PlotSettings(**self.__dict__)
+        self.settings_window.show()
+        self.settings_window.settings_updated.connect(self.update_settings)
 
-    #def update_settings(self):
-    #
-    #    for attr in sorted(self.settings_window.__dict__.keys()):
-    #        setattr(self, attr, self.settings_window.__dict__[attr])
-    #
-    #    self.plot()
+    def update_settings(self):
+
+        for attr in sorted(self.settings_window.__dict__.keys()):
+            setattr(self, attr, self.settings_window.__dict__[attr])
+
+        self.plot()
 
     def disp_help(self):
         """
@@ -364,15 +391,9 @@ class ModEMPlotResponse(QtWidgets.QMainWindow):
 
         help_string = "\n".join(ll)
 
-        QtWidgets.QMessageBox.information(self.centralWidget, "Help", help_string)
-        
-    def closeEvent(self, event):
-        self.closed.emit()
-        QtWidgets.QMainWindow.closeEvent(self, event)
-
-
-
-
+        QtWidgets.QMessageBox.information(
+            self.centralWidget, "Help", help_string
+        )
 
 
 # ==============================================================================
