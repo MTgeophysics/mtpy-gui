@@ -303,9 +303,7 @@ class PlotResponses(QtWidgets.QWidget):
             self.station = str(widget_item.text())
         except AttributeError:
             self.station = self.list_widget.item(0).text()
-            print(
-                f"Station selected does not exist, setting to {self.station}"
-            )
+            print(f"Station selected does not exist, setting to {self.station}")
         self.plot()
 
     def file_changed_dfn(self):
@@ -336,6 +334,8 @@ class PlotResponses(QtWidgets.QWidget):
 
     def apply_interpolation(self):
         print(f"{'='*10} interpolating {'='*10}")
+        print(self.modem_data[self.station].has_impedance())
+        print(self.modem_data[self.station])
 
         self.modem_data[self.station] = self.modem_data[
             self.station
@@ -353,9 +353,7 @@ class PlotResponses(QtWidgets.QWidget):
         self.phase_flip_comp = str(self.flip_phase_combo.currentText()).lower()
 
     def apply_flip_phase(self):
-        self.modem_data[self.station].flip_phase(
-            **{self.phase_flip_comp: True}
-        )
+        self.modem_data[self.station].flip_phase(**{self.phase_flip_comp: True})
         self.plot()
 
     def set_error_comp(self):
@@ -689,6 +687,7 @@ class PlotResponses(QtWidgets.QWidget):
             elif aa < 8 and aa > 3:
                 ylabels[-1] = ""
                 ylabels[0] = ""
+                ax.set_yticks(ax.get_yticks().tolist())
                 ax.set_yticklabels(ylabels)
                 plt.setp(ax.get_xticklabels(), visible=False)
 
@@ -715,14 +714,10 @@ class PlotResponses(QtWidgets.QWidget):
             ax.set_xscale("log", nonpositive="clip")
             ax.set_xlim(
                 xmin=10
-                ** (
-                    np.floor(np.log10(self.modem_data[self.station].period[0]))
-                )
+                ** (np.floor(np.log10(self.modem_data[self.station].period[0])))
                 * 1.01,
                 xmax=10
-                ** (
-                    np.ceil(np.log10(self.modem_data[self.station].period[-1]))
-                )
+                ** (np.ceil(np.log10(self.modem_data[self.station].period[-1])))
                 * 0.99,
             )
             ax.grid(True, alpha=0.25)
@@ -884,7 +879,7 @@ class PlotResponses(QtWidgets.QWidget):
                 mplwidgets.RectangleSelector(
                     ax,
                     self.on_select_rect,
-                    drawtype="box",
+                    # drawtype="box",
                     useblit=True,
                     interactive=True,
                     minspanx=5,
@@ -902,7 +897,6 @@ class PlotResponses(QtWidgets.QWidget):
         """
 
         if hasattr(event, "artist"):
-
             if isinstance(event.artist, Line2D):
                 # line_collection = event.artist
                 data_point = event.artist
@@ -1077,9 +1071,7 @@ class PlotResponses(QtWidgets.QWidget):
             # set the values
             self._err_list[self._ax_index][0].set_data(ncap_l)
             self._err_list[self._ax_index][1].set_data(ncap_u)
-            self._err_list[self._ax_index][2].get_paths()[
-                e_index
-            ].vertices = eb
+            self._err_list[self._ax_index][2].get_paths()[e_index].vertices = eb
 
             # need to redraw the figure
             self._ax.figure.canvas.draw()
@@ -1137,7 +1129,6 @@ class PlotResponses(QtWidgets.QWidget):
                     self._key = "tip"
 
     def _get_frequency_range(self, period_01, period_02):
-
         fmin = min([period_01, period_02])
         fmax = max([period_01, period_02])
         prange = np.where(

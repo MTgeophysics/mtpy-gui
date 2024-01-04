@@ -22,10 +22,10 @@ try:
 except ImportError:
     raise ImportError("This version needs PyQt5")
 
-from mtpy.gui.modem_plot_response_gui import PlotResponses
-from mtpy.gui.response_plot_settings import PlotSettings
-from mtpy.gui.get_stations import GetStations
-from mtpy.gui.plot_stations import PlotStations
+from mtpy_gui.modeling.modem_plot_response_gui import PlotResponses
+from mtpy_gui.modeling.response_plot_settings import PlotSettings
+from mtpy_gui.modeling.get_stations import GetStations
+from mtpy_gui.modeling.plot_stations import PlotStations
 
 
 # ==============================================================================
@@ -256,11 +256,8 @@ class ModEMPlotResponse(QtWidgets.QMainWindow):
             )
         )
 
-        self.plot_response.modem_data.write_data_file(
-            save_path=save_fn.parent,
-            fn_basename=save_fn.name,
-            compute_error=False,
-            fill=True,
+        self.plot_response.modem_data.to_modem_data(
+            data_filename=save_fn,
             elevation=self.plot_response.modem_data.topography,
         )
 
@@ -283,9 +280,7 @@ class ModEMPlotResponse(QtWidgets.QMainWindow):
             fn_list += fn_names[ii]
         fn_list = [Path(fn) for fn in fn_list]
 
-        new_array, new_dict = self.plot_response.modem_data.add_station(fn_list)
-        self.plot_response.modem_data.data_array = new_array
-        self.plot_response.modem_data.mt_dict = new_dict
+        self.plot_response.modem_data.add_station(fn_list)
 
         # fill list of stations
         station_list = list(
@@ -320,11 +315,7 @@ class ModEMPlotResponse(QtWidgets.QMainWindow):
         )
         rs.exec_()
 
-        new_data, new_mtdict = self.plot_response.modem_data.remove_station(
-            rs.checked_stations
-        )
-        self.plot_response.modem_data.data_array = new_data
-        self.plot_response.modem_data.mt_dict = new_mtdict
+        self.plot_response.modem_data.remove_station(rs.checked_stations)
 
         # fill list of stations
         station_list = list(
@@ -366,7 +357,6 @@ class ModEMPlotResponse(QtWidgets.QMainWindow):
         self.settings_window.settings_updated.connect(self.update_settings)
 
     def update_settings(self):
-
         for attr in sorted(self.settings_window.__dict__.keys()):
             setattr(self, attr, self.settings_window.__dict__[attr])
 

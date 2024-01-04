@@ -180,7 +180,6 @@ class MTEditorWindow(QtWidgets.QMainWindow):
         )
 
     def update_plot(self):
-
         self.mask_kw = {
             "color": self.plot_widget.plot_properties.mask_color,
             "marker": self.plot_widget.plot_properties.mask_marker,
@@ -246,6 +245,7 @@ class PlotWidget(QtWidgets.QWidget):
             "slinear",
             "quadratic",
             "cubic",
+            "pchip",
         ]
 
         self.file_types = ";;".join(
@@ -411,9 +411,7 @@ class PlotWidget(QtWidgets.QWidget):
         self.remove_distortion_button.setText(
             "Remove Distortion [Bibby et al., 2005]"
         )
-        self.remove_distortion_button.setStyleSheet(
-            "background-color: #b8c3f5"
-        )
+        self.remove_distortion_button.setStyleSheet("background-color: #b8c3f5")
         self.remove_distortion_button.setFont(button_font)
         self.remove_distortion_button.pressed.connect(
             self.remove_distortion_apply
@@ -438,9 +436,7 @@ class PlotWidget(QtWidgets.QWidget):
             "Always rotating original data, assuming: N = 0, E = 90."
         )
         self.rotate_angle_label = QtWidgets.QLabel("Rotate (deg)")
-        self.rotate_angle_edit = QtWidgets.QLineEdit(
-            f"{self.rotate_angle:.4g}"
-        )
+        self.rotate_angle_edit = QtWidgets.QLineEdit(f"{self.rotate_angle:.4g}")
         self.rotate_angle_edit.editingFinished.connect(self.rotate_set_angle)
 
         self.rotate_angle_button = QtWidgets.QPushButton("Apply Rotation")
@@ -487,9 +483,7 @@ class PlotWidget(QtWidgets.QWidget):
         self.interp_type_combo = QtWidgets.QComboBox()
         self.interp_type_combo.addItems(self._interp_types)
         self.interp_type_combo.setCurrentIndex(3)
-        self.interp_type_combo.currentIndexChanged.connect(
-            self.interp_set_type
-        )
+        self.interp_type_combo.currentIndexChanged.connect(self.interp_set_type)
         self.na_interp_type_label = QtWidgets.QLabel("NAN Interp. Type")
         self.na_interp_type_combo = QtWidgets.QComboBox()
         self.na_interp_type_combo.addItems(self._interp_types)
@@ -727,14 +721,10 @@ class PlotWidget(QtWidgets.QWidget):
         self.meta_lat_edit.setText("{0:.6f}".format(self.mt_obj.latitude))
         self.meta_lon_edit.setText("{0:.6f}".format(self.mt_obj.longitude))
         try:
-            self.meta_elev_edit.setText(
-                "{0:.6f}".format(self.mt_obj.elevation)
-            )
+            self.meta_elev_edit.setText("{0:.6f}".format(self.mt_obj.elevation))
         except ValueError:
             self.mt_obj.elevation = 0.0
-            self.meta_elev_edit.setText(
-                "{0:.6f}".format(self.mt_obj.elevation)
-            )
+            self.meta_elev_edit.setText("{0:.6f}".format(self.mt_obj.elevation))
         self.meta_date_edit.setText(
             "{0}".format(self.mt_obj.station_metadata.provenance.creation_time)
         )
@@ -844,9 +834,7 @@ class PlotWidget(QtWidgets.QWidget):
             and self._edited_ss == False
         ):
             # remove distortion from original data
-            self.mt_obj = self._mt_obj.remove_distortion(
-                num_freq=self.num_freq
-            )
+            self.mt_obj = self._mt_obj.remove_distortion(num_freq=self.num_freq)
             print("\n    - Removed distortion from original data")
 
         else:
@@ -934,7 +922,6 @@ class PlotWidget(QtWidgets.QWidget):
 
         interp_period = new_period[interp_idx]
         if len(interp_idx) != len(new_period):
-
             info = [
                 "Cannot interpolate over periods not represented in the data.",
                 f"Data min = {self.mt_obj.period.min():<8.3e} s",
@@ -1144,9 +1131,7 @@ class PlotWidget(QtWidgets.QWidget):
 
         # make axis od = off-diagonal, d = diagonal, share x axis across plots
         self.ax_res_od = self.figure.add_subplot(gs[0, 0])
-        self.ax_res_d = self.figure.add_subplot(
-            gs[0, 1], sharex=self.ax_res_od
-        )
+        self.ax_res_d = self.figure.add_subplot(gs[0, 1], sharex=self.ax_res_od)
 
         self.ax_phase_od = self.figure.add_subplot(
             gs[1, 0], sharex=self.ax_res_od
@@ -1156,12 +1141,8 @@ class PlotWidget(QtWidgets.QWidget):
         )
 
         # include tipper, r = real, i = imaginary
-        self.ax_tip_x = self.figure.add_subplot(
-            gs[2, 0], sharex=self.ax_res_od
-        )
-        self.ax_tip_y = self.figure.add_subplot(
-            gs[2, 1], sharex=self.ax_res_od
-        )
+        self.ax_tip_x = self.figure.add_subplot(gs[2, 0], sharex=self.ax_res_od)
+        self.ax_tip_y = self.figure.add_subplot(gs[2, 1], sharex=self.ax_res_od)
 
         self.ax_list = [
             self.ax_res_od,
@@ -1390,7 +1371,6 @@ class PlotWidget(QtWidgets.QWidget):
 
         # make sure there is tipper data to plot
         if self.plot_tipper == True:
-
             kw_tx = dict(kw_xx)
             kw_ty = dict(kw_yy)
             kw_tx["color"] = self.plot_properties.tipper_x_color
@@ -1754,7 +1734,6 @@ class PlotWidget(QtWidgets.QWidget):
                 self._ax_index = ax_index
 
     def _get_frequency_range(self, period_01, period_02):
-
         fmin = min([1.0 / period_01, 1.0 / period_02])
         fmax = max([1.0 / period_01, 1.0 / period_02])
         prange = np.where(
@@ -2085,14 +2064,10 @@ class PlotSettings(QtWidgets.QWidget):
         )
 
         self.phased_limits_min_edit = QtWidgets.QLineEdit()
-        self.phased_limits_min_edit.editingFinished.connect(
-            self.set_phased_min
-        )
+        self.phased_limits_min_edit.editingFinished.connect(self.set_phased_min)
 
         self.phased_limits_max_edit = QtWidgets.QLineEdit()
-        self.phased_limits_max_edit.editingFinished.connect(
-            self.set_phased_max
-        )
+        self.phased_limits_max_edit.editingFinished.connect(self.set_phased_max)
 
         self.tip_x_limits_label = QtWidgets.QLabel("T_x limits (min, max)")
 
@@ -2412,7 +2387,6 @@ class MTTextEditor(QtWidgets.QWidget):
         self.setup_ui()
 
     def setup_ui(self):
-
         self.setWindowTitle("MT Text Editor")
 
         # header label font
@@ -2439,9 +2413,7 @@ class MTTextEditor(QtWidgets.QWidget):
         )
 
         self.header_dataid_label = QtWidgets.QLabel("Station Name")
-        self.header_dataid_edit = QtWidgets.QLineEdit(
-            self.mt_obj.Header.dataid
-        )
+        self.header_dataid_edit = QtWidgets.QLineEdit(self.mt_obj.Header.dataid)
         self.header_dataid_edit.editingFinished.connect(self.header_set_dataid)
 
         self.header_elev_label = QtWidgets.QLabel("Elevation (m)")
@@ -2460,9 +2432,7 @@ class MTTextEditor(QtWidgets.QWidget):
         self.header_empty_edit.editingFinished.connect(self.header_set_empty)
 
         self.header_fileby_label = QtWidgets.QLabel("File By")
-        self.header_fileby_edit = QtWidgets.QLineEdit(
-            self.mt_obj.Header.fileby
-        )
+        self.header_fileby_edit = QtWidgets.QLineEdit(self.mt_obj.Header.fileby)
         self.header_fileby_edit.editingFinished.connect(self.header_set_fileby)
 
         self.header_filedate_label = QtWidgets.QLabel("File Date (YYY-MM-DD)")
@@ -2939,9 +2909,7 @@ class MTTextEditor(QtWidgets.QWidget):
 
     def header_set_fileby(self):
         self.mt_obj.Header.fileby = str(self.header_fileby_edit.text())
-        self.header_fileby_edit.setText(
-            "{0}".format(self.mt_obj.Header.fileby)
-        )
+        self.header_fileby_edit.setText("{0}".format(self.mt_obj.Header.fileby))
 
     def header_set_filedate(self):
         self.mt_obj.Header.filedate = str(self.header_filedate_edit.text())
@@ -3021,7 +2989,6 @@ class MTTextEditor(QtWidgets.QWidget):
         )
 
     def fill_meas(self):
-
         if hasattr(self.mt_obj.Define_measurement, "meas_hx"):
             self.meas_h01_id_edit.setText(
                 "{0}".format(self.mt_obj.Define_measurement.meas_hx.id)
@@ -3107,16 +3074,12 @@ class MTTextEditor(QtWidgets.QWidget):
             )
             self.meas_hr1_x_edit.setText(
                 "{0:.2f}".format(
-                    self._check_float(
-                        self.mt_obj.Define_measurement.meas_rhx.x
-                    )
+                    self._check_float(self.mt_obj.Define_measurement.meas_rhx.x)
                 )
             )
             self.meas_hr1_y_edit.setText(
                 "{0:.2f}".format(
-                    self._check_float(
-                        self.mt_obj.Define_measurement.meas_rhx.y
-                    )
+                    self._check_float(self.mt_obj.Define_measurement.meas_rhx.y)
                 )
             )
             self.meas_hr1_ct_combo.setCurrentIndex(3)
@@ -3135,16 +3098,12 @@ class MTTextEditor(QtWidgets.QWidget):
             )
             self.meas_hr2_x_edit.setText(
                 "{0:.2f}".format(
-                    self._check_float(
-                        self.mt_obj.Define_measurement.meas_rhy.x
-                    )
+                    self._check_float(self.mt_obj.Define_measurement.meas_rhy.x)
                 )
             )
             self.meas_hr2_y_edit.setText(
                 "{0:.2f}".format(
-                    self._check_float(
-                        self.mt_obj.Define_measurement.meas_rhy.y
-                    )
+                    self._check_float(self.mt_obj.Define_measurement.meas_rhy.y)
                 )
             )
             self.meas_hr2_ct_combo.setCurrentIndex(4)
@@ -3166,16 +3125,12 @@ class MTTextEditor(QtWidgets.QWidget):
             )
             self.meas_e01_x2_edit.setText(
                 "{0:.2f}".format(
-                    self._check_float(
-                        self.mt_obj.Define_measurement.meas_ex.x2
-                    )
+                    self._check_float(self.mt_obj.Define_measurement.meas_ex.x2)
                 )
             )
             self.meas_e01_y2_edit.setText(
                 "{0:.2f}".format(
-                    self._check_float(
-                        self.mt_obj.Define_measurement.meas_ex.y2
-                    )
+                    self._check_float(self.mt_obj.Define_measurement.meas_ex.y2)
                 )
             )
             self.meas_e01_ct_combo.setCurrentIndex(0)
@@ -3197,16 +3152,12 @@ class MTTextEditor(QtWidgets.QWidget):
             )
             self.meas_e02_x2_edit.setText(
                 "{0:.2f}".format(
-                    self._check_float(
-                        self.mt_obj.Define_measurement.meas_ey.x2
-                    )
+                    self._check_float(self.mt_obj.Define_measurement.meas_ey.x2)
                 )
             )
             self.meas_e02_y2_edit.setText(
                 "{0:.2f}".format(
-                    self._check_float(
-                        self.mt_obj.Define_measurement.meas_ey.y2
-                    )
+                    self._check_float(self.mt_obj.Define_measurement.meas_ey.y2)
                 )
             )
             self.meas_e02_ct_combo.setCurrentIndex(1)
