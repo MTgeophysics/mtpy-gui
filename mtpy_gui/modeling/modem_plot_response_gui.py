@@ -333,9 +333,7 @@ class PlotResponses(QtWidgets.QWidget):
         self.plot()
 
     def apply_interpolation(self):
-        print(f"{'='*10} interpolating {'='*10}")
-        print(self.modem_data[self.station].has_impedance())
-        print(self.modem_data[self.station])
+        print(f"{'='*10} interpolating {self.station} {'='*10}")
 
         self.modem_data[self.station] = self.modem_data[
             self.station
@@ -953,6 +951,13 @@ class PlotResponses(QtWidgets.QWidget):
             ] = (
                 np.nan + 1j * np.nan
             )
+            self.modem_data[
+                self.station
+            ]._transfer_function.transfer_function_model_error.loc[
+                self._comp_dict
+            ][
+                p_index
+            ] = np.nan
 
             # plot the points as masked
             self._ax.plot(
@@ -1136,7 +1141,7 @@ class PlotResponses(QtWidgets.QWidget):
             & (self.modem_data[self.station].period <= fmax)
         )
 
-        return prange
+        return prange[0]
 
     def on_select_rect(self, eclick, erelease):
         x1 = eclick.xdata
@@ -1144,64 +1149,59 @@ class PlotResponses(QtWidgets.QWidget):
 
         f_idx = self._get_frequency_range(x1, x2)
 
-        print(self._key, self._ax_index)
-        for ff in f_idx:
-            period = self.modem_data.period_list[ff]
-            if self._key == "z":
-                self._ax.plot(
-                    period,
-                    self.modem_data[self.station].Z.resistivity[
-                        ff, self._comp_index_x, self._comp_index_y
-                    ],
-                    color=(0, 0, 0),
-                    marker="x",
-                    ms=self.plot_settings.ms * 2,
-                    mew=4,
-                )
-                self._ax2.plot(
-                    period,
-                    self.modem_data[self.station].Z.phase[
-                        ff, self._comp_index_x, self._comp_index_y
-                    ],
-                    color=(0, 0, 0),
-                    marker="x",
-                    ms=self.plot_settings.ms * 2,
-                    mew=4,
-                )
+        period = self.modem_data[self.station].period[f_idx]
+        print(period)
 
-                self.modem_data[self.station].Z.z[
-                    ff, self._comp_index_x, self._comp_index_y
-                ] = (0.0 + 0.0 * 1j)
-                self.modem_data[self.station].Z.z_err[
-                    ff, self._comp_index_x, self._comp_index_y
-                ] = 0.0
-            elif self._key == "tip":
-                self._ax.plot(
-                    period,
-                    self.modem_data[self.station]
-                    .Tipper.tipper[ff, self._comp_index_x, self._comp_index_y]
-                    .real,
-                    color=(0, 0, 0),
-                    marker="x",
-                    ms=self.plot_settings.ms * 2,
-                    mew=4,
-                )
-                self._ax2.plot(
-                    period,
-                    self.modem_data[self.station]
-                    .Tipper.tipper[ff, self._comp_index_x, self._comp_index_y]
-                    .imag,
-                    color=(0, 0, 0),
-                    marker="x",
-                    ms=self.plot_settings.ms * 2,
-                    mew=4,
-                )
+        # plot
+        if self._key == "z":
+            values_01 = self.modem_data[self.station].Z.resistivity[
+                f_idx, self._comp_index_x, self._comp_index_y
+            ]
+            values_02 = self.modem_data[self.station].Z.phase[
+                f_idx, self._comp_index_x, self._comp_index_y
+            ]
 
-                self.modem_data[self.station].Tipper.tipper[
-                    ff, self._comp_index_x, self._comp_index_y
-                ] = (0.0 + 0.0 * 1j)
-                self.modem_data[self.station].Tipper.tipper_err[
-                    ff, self._comp_index_x, self._comp_index_y
-                ] = 0.0
+        elif self._key == "tip":
+            values_01 = (
+                self.modem_data[self.station]
+                .Tipper.tipper[f_idx, self._comp_index_x, self._comp_index_y]
+                .real
+            )
+            values_02 = (
+                self.modem_data[self.station]
+                .Tipper.tipper[f_idx, self._comp_index_x, self._comp_index_y]
+                .imag
+            )
+        print(values_01)
+        print(values_02)
+        self._ax.plot(
+            period,
+            values_01,
+            color=(0, 0, 0),
+            marker="x",
+            ms=self.plot_settings.ms * 2,
+            mew=4,
+            ls="None",
+        )
+        self._ax2.plot(
+            period,
+            values_02,
+            color=(0, 0, 0),
+            marker="x",
+            ms=self.plot_settings.ms * 2,
+            mew=4,
+            ls="None",
+        )
+
         self._ax.figure.canvas.draw()
         self._ax2.figure.canvas.draw()
+
+        # set to nan
+        self.modem_data[self.station]._transfer_function.transfer_function.loc[
+            self._comp_dict
+        ][f_idx] = (np.nan + 1j * np.nan)
+        self.modem_data[
+            self.station
+        ]._transfer_function.transfer_function_model_error.loc[self._comp_dict][
+            f_idx
+        ] = np.nan

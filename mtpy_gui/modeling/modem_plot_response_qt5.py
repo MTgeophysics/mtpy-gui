@@ -283,9 +283,7 @@ class ModEMPlotResponse(QtWidgets.QMainWindow):
         self.plot_response.modem_data.add_station(fn_list)
 
         # fill list of stations
-        station_list = list(
-            sorted(self.plot_response.modem_data.mt_dict.keys())
-        )
+        station_list = list(sorted(self.plot_response.modem_data.keys()))
         self.plot_response.list_widget.clear()
         for station in station_list:
             self.plot_response.list_widget.addItem(station)
@@ -318,9 +316,7 @@ class ModEMPlotResponse(QtWidgets.QMainWindow):
         self.plot_response.modem_data.remove_station(rs.checked_stations)
 
         # fill list of stations
-        station_list = list(
-            sorted(self.plot_response.modem_data.mt_dict.keys())
-        )
+        station_list = list(sorted(self.plot_response.modem_data.keys()))
         self.plot_response.list_widget.clear()
         for station in station_list:
             self.plot_response.list_widget.addItem(station)
