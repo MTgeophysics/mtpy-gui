@@ -742,17 +742,23 @@ class PlotResponses(QtWidgets.QWidget):
                 return
 
             # find locations where points have been masked
-            nzxx_r = np.nonzero(resp_z_obj.z[:, 0, 0])[0]
-            nzxy_r = np.nonzero(resp_z_obj.z[:, 0, 1])[0]
-            nzyx_r = np.nonzero(resp_z_obj.z[:, 1, 0])[0]
-            nzyy_r = np.nonzero(resp_z_obj.z[:, 1, 1])[0]
-            ntx_r = np.nonzero(resp_t_obj.tipper[:, 0, 0])[0]
-            nty_r = np.nonzero(resp_t_obj.tipper[:, 0, 1])[0]
+            if self.modem_resp[self.resp_station].has_impedance():
+                nzxx_r = np.nonzero(resp_z_obj.z[:, 0, 0])[0]
+                nzxy_r = np.nonzero(resp_z_obj.z[:, 0, 1])[0]
+                nzyx_r = np.nonzero(resp_z_obj.z[:, 1, 0])[0]
+                nzyy_r = np.nonzero(resp_z_obj.z[:, 1, 1])[0]
 
-            rms_xx = resp_z_err[nzxx_r, 0, 0].std()
-            rms_xy = resp_z_err[nzxy_r, 0, 1].std()
-            rms_yx = resp_z_err[nzyx_r, 1, 0].std()
-            rms_yy = resp_z_err[nzyy_r, 1, 1].std()
+                rms_xx = resp_z_err[nzxx_r, 0, 0].std()
+                rms_xy = resp_z_err[nzxy_r, 0, 1].std()
+                rms_yx = resp_z_err[nzyx_r, 1, 0].std()
+                rms_yy = resp_z_err[nzyy_r, 1, 1].std()
+
+            if self.modem_resp[self.resp_station].has_tipper():
+                ntx_r = np.nonzero(resp_t_obj.tipper[:, 0, 0])[0]
+                nty_r = np.nonzero(resp_t_obj.tipper[:, 0, 1])[0]
+
+                rms_tx = resp_t_err[ntx_r, 0, 0].std()
+                rms_ty = resp_t_err[nty_r, 0, 1].std()
 
             # --> make key word dictionaries for plotting
 
@@ -826,14 +832,8 @@ class PlotResponses(QtWidgets.QWidget):
                 )
                 line_list[4] += [rertx[0]]
                 line_list[5] += [rerty[0]]
-                label_list[4] += [
-                    "$T^m_{x}$ "
-                    + "rms={0:.2f}".format(resp_t_err[ntx, 0, 0].std())
-                ]
-                label_list[5] += [
-                    "$T^m_{y}$"
-                    + "rms={0:.2f}".format(resp_t_err[nty, 0, 1].std())
-                ]
+                label_list[4] += ["$T^m_{x}$ " + f"rms={rms_tx:.2f}"]
+                label_list[5] += ["$T^m_{x}$ " + f"rms={rms_ty:.2f}"]
 
             legend_ax_list = self.ax_list[0:4]
             if self.plot_tipper == True:
