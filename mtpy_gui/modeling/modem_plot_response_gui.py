@@ -106,11 +106,12 @@ class PlotResponses(QtWidgets.QWidget):
         # create new modem data object
         self.modem_data = MTData()
         self.modem_data.from_modem_data(self._data_fn)
+        self.periods = self.modem_data.get_periods()
 
         # make a back up copy that will be unchanged
         # that way we can revert back
-        self._modem_data_copy = MTData()
-        self._modem_data_copy.from_modem_data(self._data_fn)
+        self._modem_data_copy = self.modem_data.copy()
+        # self._modem_data_copy.from_modem_data(self._data_fn)
 
         self.dirpath = self._data_fn.parent
 
@@ -659,6 +660,12 @@ class PlotResponses(QtWidgets.QWidget):
             )
 
         # --> set limits if input
+        axrxx.set_xlim(
+            (
+                self.periods.min(),
+                self.periods.max(),
+            )
+        )
         if self.plot_settings.res_xx_limits is not None:
             axrxx.set_ylim(self.plot_settings.res_xx_limits)
         if self.plot_settings.res_xy_limits is not None:
@@ -737,9 +744,15 @@ class PlotResponses(QtWidgets.QWidget):
                 # find locations where points have been masked
                 if self.modem_resp[self.resp_station].has_impedance():
                     resp_z_obj = self.modem_resp[self.resp_station].Z
-                    resp_z_err = np.nan_to_num(
-                        (z_obj.z - resp_z_obj.z) / z_obj.z_model_error
+
+                    z_index = np.where(
+                        np.in1d(z_obj.period, resp_z_obj.period)
                     )
+                    with np.errstate(divide="ignore", invalid="ignore"):
+                        resp_z_err = np.nan_to_num(
+                            (z_obj.z[z_index] - resp_z_obj.z)
+                            / z_obj.z_model_error[z_index]
+                        )
 
                     nzxx_r = np.nonzero(resp_z_obj.z[:, 0, 0])[0]
                     nzxy_r = np.nonzero(resp_z_obj.z[:, 0, 1])[0]
@@ -1032,7 +1045,7 @@ class PlotResponses(QtWidgets.QWidget):
             try:
                 e_index = event.ind[0]
                 eb = (
-                    self._err_list[self._ax_index][2]
+                    self._err_list[self._ax_index][2][0]
                     .get_paths()[e_index]
                     .vertices
                 )
@@ -1040,8 +1053,12 @@ class PlotResponses(QtWidgets.QWidget):
                 return
 
             # make ecap array
-            ecap_l = self._err_list[self._ax_index][0].get_data()[1][e_index]
-            ecap_u = self._err_list[self._ax_index][1].get_data()[1][e_index]
+            ecap_l = self._err_list[self._ax_index][1][0].get_data()[1][
+                e_index
+            ]
+            ecap_u = self._err_list[self._ax_index][1][1].get_data()[1][
+                e_index
+            ]
 
             # change apparent resistivity error
             if self._key == "tip":
@@ -1050,55 +1067,49 @@ class PlotResponses(QtWidgets.QWidget):
                 ecap_l = ecap_l - self.add_t_error
                 ecap_u = ecap_u + self.add_t_error
             elif self._key == "z":
-                if self.plot_z:
-                    neb_u = eb[0, 1] - self.add_z_error * abs(eb[0, 1]) / 2
-                    neb_l = eb[1, 1] + self.add_z_error * abs(eb[1, 1]) / 2
-                    ecap_l = ecap_l - self.add_z_error * abs(eb[0, 1]) / 2
-                    ecap_u = ecap_u + self.add_z_error * abs(eb[1, 1]) / 2
-                elif not self.plot_z:
-                    if self._ax_index < 4:
-                        neb_u = eb[0, 1] - self.add_z_error * np.sqrt(
-                            abs(eb[0, 1])
-                        )
-                        neb_l = eb[1, 1] + self.add_z_error * np.sqrt(
-                            abs(eb[1, 1])
-                        )
-                        ecap_l = ecap_l - self.add_z_error * np.sqrt(
-                            abs(eb[0, 1])
-                        )
-                        ecap_u = ecap_u + self.add_z_error * np.sqrt(
-                            abs(eb[1, 1])
-                        )
-                    else:
-                        neb_u = (
-                            eb[0, 1]
-                            - self.add_z_error / 100 * abs(eb[0, 1]) * 4
-                        )
-                        neb_l = (
-                            eb[1, 1]
-                            + self.add_z_error / 100 * abs(eb[1, 1]) * 4
-                        )
-                        ecap_l = (
-                            ecap_l - self.add_z_error / 100 * abs(eb[0, 1]) * 4
-                        )
-                        ecap_u = (
-                            ecap_u + self.add_z_error / 100 * abs(eb[1, 1]) * 4
-                        )
+                if self._ax_index < 4:
+                    neb_u = (
+                        eb[0, 1]
+                        - np.sqrt(self.add_z_error * abs(eb[0, 1])) * 2
+                    )
+                    neb_l = (
+                        eb[1, 1]
+                        + np.sqrt(self.add_z_error * abs(eb[1, 1])) * 2
+                    )
+                    ecap_l = (
+                        ecap_l - np.sqrt(self.add_z_error * abs(eb[0, 1])) * 2
+                    )
+                    ecap_u = (
+                        ecap_u + np.sqrt(self.add_z_error * abs(eb[1, 1])) * 2
+                    )
+                else:
+                    neb_u = (
+                        eb[0, 1] - self.add_z_error / 100 * abs(eb[0, 1]) * 2
+                    )
+                    neb_l = (
+                        eb[1, 1] + self.add_z_error / 100 * abs(eb[1, 1]) * 2
+                    )
+                    ecap_l = (
+                        ecap_l - self.add_z_error / 100 * abs(eb[0, 1]) * 2
+                    )
+                    ecap_u = (
+                        ecap_u + self.add_z_error / 100 * abs(eb[1, 1]) * 2
+                    )
 
             # set the new error bar values
             eb[0, 1] = neb_u
             eb[1, 1] = neb_l
 
             # reset the error bars and caps
-            ncap_l = self._err_list[self._ax_index][0].get_data()
-            ncap_u = self._err_list[self._ax_index][1].get_data()
+            ncap_l = self._err_list[self._ax_index][1][0].get_data()
+            ncap_u = self._err_list[self._ax_index][1][1].get_data()
             ncap_l[1][e_index] = ecap_l
             ncap_u[1][e_index] = ecap_u
 
             # set the values
-            self._err_list[self._ax_index][0].set_data(ncap_l)
-            self._err_list[self._ax_index][1].set_data(ncap_u)
-            self._err_list[self._ax_index][2].get_paths()[
+            self._err_list[self._ax_index][1][0].set_data(ncap_l)
+            self._err_list[self._ax_index][1][1].set_data(ncap_u)
+            self._err_list[self._ax_index][2][0].get_paths()[
                 e_index
             ].vertices = eb
 
