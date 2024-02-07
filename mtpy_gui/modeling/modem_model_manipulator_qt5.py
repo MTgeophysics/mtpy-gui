@@ -19,7 +19,9 @@ except ImportError:
     raise ImportError("This version needs PyQt5")
 
 
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt5agg import (
+    FigureCanvasQTAgg as FigureCanvas,
+)
 from matplotlib.backends.backend_qt5agg import (
     NavigationToolbar2QT as NavigationToolbar,
 )
@@ -31,6 +33,7 @@ from scipy import signal
 
 from mtpy import MTData
 from mtpy.modeling import StructuredGrid3D
+
 
 # ==============================================================================
 # Main Window
@@ -167,7 +170,6 @@ class ResLimits(QtWidgets.QWidget):
         self.setup_ui()
 
     def setup_ui(self):
-
         self.label = QtWidgets.QLabel("Resistivty (Log10)")
         self.res_min_label = QtWidgets.QLabel("min")
         self.res_min_edit = QtWidgets.QLineEdit()
@@ -400,7 +402,6 @@ class ModelWidget(QtWidgets.QWidget):
         self.ui_setup()
 
     def ui_setup(self):
-
         self.screen_size = QtWidgets.QDesktopWidget().screenGeometry()
 
         ## --> map view of the model
@@ -423,7 +424,9 @@ class ModelWidget(QtWidgets.QWidget):
         self.map_copy_number_edit = QtWidgets.QLineEdit()
         self.map_copy_number_edit.setText("{0:0.0f}".format(self.map_copy_num))
         self.map_copy_number_edit.setMaximumWidth(35)
-        self.map_copy_number_edit.editingFinished.connect(self.set_map_copy_num)
+        self.map_copy_number_edit.editingFinished.connect(
+            self.set_map_copy_num
+        )
         self.map_copy_number_label = QtWidgets.QLabel("N")
 
         self.map_depth_label = QtWidgets.QLabel(
@@ -688,7 +691,7 @@ class ModelWidget(QtWidgets.QWidget):
     def model_fn(self, model_fn):
         self._model_fn = model_fn
         self.model_obj = StructuredGrid3D()
-        self.model_obj.read_modem_file(self._model_fn)
+        self.model_obj.from_modem(self._model_fn)
         ## make a copy of the resistivity model to manipulate
         self.new_res_model = self.model_obj.res_model.copy()
 
@@ -700,7 +703,9 @@ class ModelWidget(QtWidgets.QWidget):
         self.north_slider.setMaximum(self.model_obj.plot_north.size - 1)
 
         self.east_label.setText("{0:.2f}".format(self.model_obj.grid_east[0]))
-        self.north_label.setText("{0:.2f}".format(self.model_obj.grid_north[0]))
+        self.north_label.setText(
+            "{0:.2f}".format(self.model_obj.grid_north[0])
+        )
 
         ##--------------plot the model-----------------------------------------
         ## get the grid coordinates first
@@ -741,7 +746,10 @@ class ModelWidget(QtWidgets.QWidget):
             color="k",
         )
         self.north_ax.plot(
-            self.north_z_line_xlist, self.north_z_line_ylist, lw=0.25, color="k"
+            self.north_z_line_xlist,
+            self.north_z_line_ylist,
+            lw=0.25,
+            color="k",
         )
         self.north_ax.set_xlabel("Easting {0}".format(self.units))
         self.north_ax.set_ylabel("Depth {0}".format(self.units))
@@ -801,7 +809,8 @@ class ModelWidget(QtWidgets.QWidget):
         self.location_ax.set_xlim(
             (
                 self.model_obj.grid_east[self.model_obj.pad_east] / self.scale,
-                self.model_obj.grid_east[-self.model_obj.pad_east] / self.scale,
+                self.model_obj.grid_east[-self.model_obj.pad_east]
+                / self.scale,
             )
         )
         self.location_ax.set_ylim(
@@ -925,7 +934,9 @@ class ModelWidget(QtWidgets.QWidget):
                 ]
             )
             self.map_north_line_xlist.append(None)
-            self.map_north_line_ylist.extend([yy / self.scale, yy / self.scale])
+            self.map_north_line_ylist.extend(
+                [yy / self.scale, yy / self.scale]
+            )
             self.map_north_line_ylist.append(None)
 
         ##--> NS cross section that move E-W
@@ -992,7 +1003,9 @@ class ModelWidget(QtWidgets.QWidget):
             self.res_limits[1],
             (self.res_limits[1] - self.res_limits[0]) / 256.0,
         )
-        self.cb_x, self.cb_y = np.meshgrid(np.array([0, 1]), res, indexing="ij")
+        self.cb_x, self.cb_y = np.meshgrid(
+            np.array([0, 1]), res, indexing="ij"
+        )
         self.cb_bar = np.zeros((2, 256))
         self.cb_bar[:, :] = res
 
@@ -1175,7 +1188,8 @@ class ModelWidget(QtWidgets.QWidget):
         self.location_ax.set_xlim(
             (
                 self.model_obj.grid_east[self.model_obj.pad_east] / self.scale,
-                self.model_obj.grid_east[-self.model_obj.pad_east] / self.scale,
+                self.model_obj.grid_east[-self.model_obj.pad_east]
+                / self.scale,
             )
         )
         self.location_ax.set_ylim(
@@ -1238,7 +1252,10 @@ class ModelWidget(QtWidgets.QWidget):
             color="k",
         )
         self.north_ax.plot(
-            self.north_z_line_xlist, self.north_z_line_ylist, lw=0.25, color="k"
+            self.north_z_line_xlist,
+            self.north_z_line_ylist,
+            lw=0.25,
+            color="k",
         )
         self.north_ax.pcolormesh(
             self.plot_east_z,
@@ -1410,7 +1427,9 @@ class ModelWidget(QtWidgets.QWidget):
         for xx in x_change:
             for yy in y_change:
                 if self.model_obj.res_model[xx, self.east_index, yy] < 1e10:
-                    self.new_res_model[xx, self.east_index, yy] = self.res_value
+                    self.new_res_model[
+                        xx, self.east_index, yy
+                    ] = self.res_value
 
         self.redraw_plots()
 
@@ -1735,7 +1754,9 @@ class ModelWidget(QtWidgets.QWidget):
         self.east_copy_num = int(
             round(float(str(self.east_copy_number_edit.text())))
         )
-        self.east_copy_number_edit.setText("{0:.0f}".format(self.east_copy_num))
+        self.east_copy_number_edit.setText(
+            "{0:.0f}".format(self.east_copy_num)
+        )
 
     def north_copy_south(self):
         """
@@ -1794,5 +1815,4 @@ def main():
 
 
 if __name__ == "__main__":
-
     main()
