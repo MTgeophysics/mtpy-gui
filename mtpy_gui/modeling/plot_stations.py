@@ -19,6 +19,13 @@ try:
 except ImportError:
     raise ImportError("This version needs PyQt5")
 
+try:
+    import contextily as cx
+
+    has_cx = True
+except ModuleNotFoundError:
+    has_cx = False
+
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -48,17 +55,17 @@ class PlotStations(QtWidgets.QWidget):
         self.text_offset = 0.001
         self.marker_dict = {
             "ls": "None",
-            "ms": 7,
+            "ms": 4,
             "color": "k",
             "mfc": "k",
-            "marker": "v",
+            "marker": "o",
         }
         self.current_marker_dict = {
             "ls": "None",
-            "ms": 7,
+            "ms": 5,
             "color": "r",
             "mfc": "r",
-            "marker": "v",
+            "marker": "o",
         }
         self.text_dict = {
             "size": 8,
@@ -81,7 +88,6 @@ class PlotStations(QtWidgets.QWidget):
         self.setup_ui()
 
     def setup_ui(self):
-
         # this is the Canvas Widget that displays the `figure`
         # it takes the `figure` instance as a parameter to __init__
         self.figure = Figure(dpi=150)
@@ -147,7 +153,6 @@ class PlotStations(QtWidgets.QWidget):
             self.station_locations.longitude,
             self.station_locations.latitude,
         ):
-
             self.ax.text(
                 x,
                 y + self.text_offset * np.sign(y),

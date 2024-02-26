@@ -304,9 +304,7 @@ class PlotResponses(QtWidgets.QWidget):
             self.station = str(widget_item.text())
         except AttributeError:
             self.station = self.list_widget.item(0).text()
-            print(
-                f"Station selected does not exist, setting to {self.station}"
-            )
+            print(f"Station selected does not exist, setting to {self.station}")
         self.plot()
 
     def file_changed_dfn(self):
@@ -724,14 +722,10 @@ class PlotResponses(QtWidgets.QWidget):
             ax.set_xscale("log", nonpositive="clip")
             ax.set_xlim(
                 xmin=10
-                ** (
-                    np.floor(np.log10(self.modem_data[self.station].period[0]))
-                )
+                ** (np.floor(np.log10(self.modem_data[self.station].period[0])))
                 * 1.01,
                 xmax=10
-                ** (
-                    np.ceil(np.log10(self.modem_data[self.station].period[-1]))
-                )
+                ** (np.ceil(np.log10(self.modem_data[self.station].period[-1])))
                 * 0.99,
             )
             ax.grid(True, alpha=0.25)
@@ -745,9 +739,7 @@ class PlotResponses(QtWidgets.QWidget):
                 if self.modem_resp[self.resp_station].has_impedance():
                     resp_z_obj = self.modem_resp[self.resp_station].Z
 
-                    z_index = np.where(
-                        np.in1d(z_obj.period, resp_z_obj.period)
-                    )
+                    z_index = np.where(np.in1d(z_obj.period, resp_z_obj.period))
                     with np.errstate(divide="ignore", invalid="ignore"):
                         resp_z_err = np.nan_to_num(
                             (z_obj.z[z_index] - resp_z_obj.z)
@@ -774,10 +766,12 @@ class PlotResponses(QtWidgets.QWidget):
 
                 if self.modem_resp[self.resp_station].has_tipper():
                     resp_t_obj = self.modem_resp[self.resp_station].Tipper
-                    resp_t_err = np.nan_to_num(
-                        (t_obj.tipper - resp_t_obj.tipper)
-                        / t_obj.tipper_model_error
-                    )
+                    t_index = np.where(np.in1d(t_obj.period, resp_t_obj.period))
+                    with np.errstate(divide="ignore", invalid="ignore"):
+                        resp_t_err = np.nan_to_num(
+                            (t_obj.tipper[t_index] - resp_t_obj.tipper)
+                            / t_obj.tipper_model_error
+                        )
 
                     ntx_r = np.nonzero(resp_t_obj.tipper[:, 0, 0])[0]
                     nty_r = np.nonzero(resp_t_obj.tipper[:, 0, 1])[0]
@@ -1053,12 +1047,8 @@ class PlotResponses(QtWidgets.QWidget):
                 return
 
             # make ecap array
-            ecap_l = self._err_list[self._ax_index][1][0].get_data()[1][
-                e_index
-            ]
-            ecap_u = self._err_list[self._ax_index][1][1].get_data()[1][
-                e_index
-            ]
+            ecap_l = self._err_list[self._ax_index][1][0].get_data()[1][e_index]
+            ecap_u = self._err_list[self._ax_index][1][1].get_data()[1][e_index]
 
             # change apparent resistivity error
             if self._key == "tip":
@@ -1069,12 +1059,10 @@ class PlotResponses(QtWidgets.QWidget):
             elif self._key == "z":
                 if self._ax_index < 4:
                     neb_u = (
-                        eb[0, 1]
-                        - np.sqrt(self.add_z_error * abs(eb[0, 1])) * 2
+                        eb[0, 1] - np.sqrt(self.add_z_error * abs(eb[0, 1])) * 2
                     )
                     neb_l = (
-                        eb[1, 1]
-                        + np.sqrt(self.add_z_error * abs(eb[1, 1])) * 2
+                        eb[1, 1] + np.sqrt(self.add_z_error * abs(eb[1, 1])) * 2
                     )
                     ecap_l = (
                         ecap_l - np.sqrt(self.add_z_error * abs(eb[0, 1])) * 2
@@ -1089,12 +1077,8 @@ class PlotResponses(QtWidgets.QWidget):
                     neb_l = (
                         eb[1, 1] + self.add_z_error / 100 * abs(eb[1, 1]) * 2
                     )
-                    ecap_l = (
-                        ecap_l - self.add_z_error / 100 * abs(eb[0, 1]) * 2
-                    )
-                    ecap_u = (
-                        ecap_u + self.add_z_error / 100 * abs(eb[1, 1]) * 2
-                    )
+                    ecap_l = ecap_l - self.add_z_error / 100 * abs(eb[0, 1]) * 2
+                    ecap_u = ecap_u + self.add_z_error / 100 * abs(eb[1, 1]) * 2
 
             # set the new error bar values
             eb[0, 1] = neb_u
@@ -1235,8 +1219,6 @@ class PlotResponses(QtWidgets.QWidget):
         ][f_idx] = (np.nan + 1j * np.nan)
         self.modem_data[
             self.station
-        ]._transfer_function.transfer_function_model_error.loc[
-            self._comp_dict
-        ][
+        ]._transfer_function.transfer_function_model_error.loc[self._comp_dict][
             f_idx
         ] = np.nan

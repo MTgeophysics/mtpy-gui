@@ -31,6 +31,13 @@ from matplotlib.figure import Figure
 import numpy as np
 from scipy import signal
 
+try:
+    import contextily as cx
+
+    has_cx = True
+except ModuleNotFoundError:
+    has_cx = False
+
 from mtpy import MTData
 from mtpy.modeling import StructuredGrid3D
 
@@ -127,7 +134,7 @@ class ModEM_Model_Manipulator(QtWidgets.QMainWindow):
             )
         )
 
-        self.model_widget.model_obj.write_modem_file(
+        self.model_widget.model_obj.to_modem(
             model_fn=save_fn,
             res_model=self.model_widget.new_res_model,
         )
@@ -397,6 +404,11 @@ class ModelWidget(QtWidgets.QWidget):
         self.east_copy_num = 1
         self.north_copy_num = 1
 
+        self.cx_source = None
+        self.cx_zoom = None
+        if has_cx:
+            self.cx_source = cx.providers.USGS.USTopo
+
         self.make_cb()
 
         self.ui_setup()
@@ -424,9 +436,7 @@ class ModelWidget(QtWidgets.QWidget):
         self.map_copy_number_edit = QtWidgets.QLineEdit()
         self.map_copy_number_edit.setText("{0:0.0f}".format(self.map_copy_num))
         self.map_copy_number_edit.setMaximumWidth(35)
-        self.map_copy_number_edit.editingFinished.connect(
-            self.set_map_copy_num
-        )
+        self.map_copy_number_edit.editingFinished.connect(self.set_map_copy_num)
         self.map_copy_number_label = QtWidgets.QLabel("N")
 
         self.map_depth_label = QtWidgets.QLabel(
@@ -506,7 +516,7 @@ class ModelWidget(QtWidgets.QWidget):
         self.north_copy_number_label = QtWidgets.QLabel("N")
 
         self.north_label = QtWidgets.QLabel(
-            "Northing {0:>10.2f} m".format(0, self.units)
+            "Northing {0:>10.2f} {1}".format(0, self.units)
         )
         self.north_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal)
         self.north_slider.valueChanged.connect(self.set_north_index)
@@ -672,7 +682,7 @@ class ModelWidget(QtWidgets.QWidget):
         self._data_fn = data_fn
 
         self.data_obj = MTData()
-        self.data_obj.from_modem_data(self._data_fn)
+        self.data_obj.from_modem(self._data_fn)
         # dataframe of station locations
         self.station_locations = self.data_obj.station_locations
 
@@ -703,9 +713,7 @@ class ModelWidget(QtWidgets.QWidget):
         self.north_slider.setMaximum(self.model_obj.plot_north.size - 1)
 
         self.east_label.setText("{0:.2f}".format(self.model_obj.grid_east[0]))
-        self.north_label.setText(
-            "{0:.2f}".format(self.model_obj.grid_north[0])
-        )
+        self.north_label.setText("{0:.2f}".format(self.model_obj.grid_north[0]))
 
         ##--------------plot the model-----------------------------------------
         ## get the grid coordinates first
@@ -809,8 +817,7 @@ class ModelWidget(QtWidgets.QWidget):
         self.location_ax.set_xlim(
             (
                 self.model_obj.grid_east[self.model_obj.pad_east] / self.scale,
-                self.model_obj.grid_east[-self.model_obj.pad_east]
-                / self.scale,
+                self.model_obj.grid_east[-self.model_obj.pad_east] / self.scale,
             )
         )
         self.location_ax.set_ylim(
@@ -934,9 +941,7 @@ class ModelWidget(QtWidgets.QWidget):
                 ]
             )
             self.map_north_line_xlist.append(None)
-            self.map_north_line_ylist.extend(
-                [yy / self.scale, yy / self.scale]
-            )
+            self.map_north_line_ylist.extend([yy / self.scale, yy / self.scale])
             self.map_north_line_ylist.append(None)
 
         ##--> NS cross section that move E-W
@@ -1003,9 +1008,7 @@ class ModelWidget(QtWidgets.QWidget):
             self.res_limits[1],
             (self.res_limits[1] - self.res_limits[0]) / 256.0,
         )
-        self.cb_x, self.cb_y = np.meshgrid(
-            np.array([0, 1]), res, indexing="ij"
-        )
+        self.cb_x, self.cb_y = np.meshgrid(np.array([0, 1]), res, indexing="ij")
         self.cb_bar = np.zeros((2, 256))
         self.cb_bar[:, :] = res
 
@@ -1188,8 +1191,7 @@ class ModelWidget(QtWidgets.QWidget):
         self.location_ax.set_xlim(
             (
                 self.model_obj.grid_east[self.model_obj.pad_east] / self.scale,
-                self.model_obj.grid_east[-self.model_obj.pad_east]
-                / self.scale,
+                self.model_obj.grid_east[-self.model_obj.pad_east] / self.scale,
             )
         )
         self.location_ax.set_ylim(
@@ -1222,6 +1224,21 @@ class ModelWidget(QtWidgets.QWidget):
                     self.station_locations.model_north.max() / self.scale + 1,
                 )
             )
+
+        if has_cx:
+            try:
+                cx_kwargs = {
+                    "crs": self.data_obj.utm_crs.to_string(),
+                    "source": self.cx_source,
+                }
+                if self.cx_zoom is not None:
+                    cx_kwargs["zoom"] = self.cx_zoom
+                cx.add_basemap(
+                    self.location_ax,
+                    **cx_kwargs,
+                )
+            except Exception as error:
+                print(f"Could not add base map because {error}")
 
         self.location_ax.set_xlabel("Easting {0}".format(self.units))
         self.location_ax.set_ylabel("Northing {0}".format(self.units))
@@ -1427,9 +1444,7 @@ class ModelWidget(QtWidgets.QWidget):
         for xx in x_change:
             for yy in y_change:
                 if self.model_obj.res_model[xx, self.east_index, yy] < 1e10:
-                    self.new_res_model[
-                        xx, self.east_index, yy
-                    ] = self.res_value
+                    self.new_res_model[xx, self.east_index, yy] = self.res_value
 
         self.redraw_plots()
 
@@ -1754,9 +1769,7 @@ class ModelWidget(QtWidgets.QWidget):
         self.east_copy_num = int(
             round(float(str(self.east_copy_number_edit.text())))
         )
-        self.east_copy_number_edit.setText(
-            "{0:.0f}".format(self.east_copy_num)
-        )
+        self.east_copy_number_edit.setText("{0:.0f}".format(self.east_copy_num))
 
     def north_copy_south(self):
         """
