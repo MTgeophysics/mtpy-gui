@@ -22,6 +22,8 @@ try:
 except ImportError:
     raise ImportError("This version needs PyQt5")
 
+from mtpy import MT
+
 from mtpy_gui.modeling.modem_plot_response_gui import PlotResponses
 from mtpy_gui.modeling.response_plot_settings import PlotSettings
 from mtpy_gui.modeling.get_stations import GetStations
@@ -278,9 +280,15 @@ class ModEMPlotResponse(QtWidgets.QMainWindow):
         fn_list = []
         for ii in range(0, len(fn_names), 2):
             fn_list += fn_names[ii]
+
         fn_list = [Path(fn) for fn in fn_list]
 
-        self.plot_response.modem_data.add_station(fn_list)
+        self.plot_response.modem_data.add_station(
+            fn_list,
+            survey="data",
+            compute_model_error=True,
+            interpolate_periods=self.plot_response.modem_data.get_periods(),
+        )
 
         # fill list of stations
         station_list = list(sorted(self.plot_response.modem_data.keys()))

@@ -126,7 +126,7 @@ class PlotStations(QtWidgets.QWidget):
     @staticmethod
     def get_text_pad(latitude):
         span = latitude.max() - latitude.min()
-        return span * 0.0025
+        return span * 0.005
 
     def plot(self):
         """
@@ -165,6 +165,7 @@ class PlotStations(QtWidgets.QWidget):
                 color=self.text_dict["color"],
                 fontsize=self.text_dict["size"],
                 fontweight=self.text_dict["weight"],
+                clip_on=True,
             )
 
         if has_cx:
