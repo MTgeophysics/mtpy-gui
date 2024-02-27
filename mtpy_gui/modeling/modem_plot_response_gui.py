@@ -1145,6 +1145,7 @@ class PlotResponses(QtWidgets.QWidget):
                     ax_index
                 ]["index"]
                 self._ax_index = ax_index
+                print(self._ax_index, self._comp_dict)
                 self._ax2 = self.ax_list[ax_pairs[ax_index]]
                 if ax_index < 8:
                     self._key = "z"

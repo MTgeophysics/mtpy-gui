@@ -56,14 +56,14 @@ class PlotStations(QtWidgets.QWidget):
         self.text_offset = 0.0015
         self.marker_dict = {
             "ls": "None",
-            "ms": 4,
+            "ms": 3,
             "color": "k",
             "mfc": "k",
             "marker": "o",
         }
         self.current_marker_dict = {
             "ls": "None",
-            "ms": 5,
+            "ms": 3,
             "color": "r",
             "mfc": "r",
             "marker": "o",
@@ -123,6 +123,11 @@ class PlotStations(QtWidgets.QWidget):
         self.setLayout(mpl_vbox)
         self.mpl_widget.updateGeometry()
 
+    @staticmethod
+    def get_text_pad(latitude):
+        span = latitude.max() - latitude.min()
+        return span * 0.0025
+
     def plot(self):
         """
         Plot stations with names
@@ -131,15 +136,6 @@ class PlotStations(QtWidgets.QWidget):
         plt.rcParams["font.size"] = 10
 
         label_font_dict = {"size": 12, "weight": "bold"}
-        # self.xlimits = (
-        #             self.station_locations.lon.min() * 0.998,
-        #             self.station_locations.lon.max() * 1.002,
-        #         )
-
-        # self.ylimits = (
-        #     self.station_locations.lat.min() * 0.998,
-        #     self.station_locations.lat.max() * 1.002,
-        # )
 
         xlabel = "Longitude (deg)"
         ylabel = "Latitude (deg)"
@@ -154,7 +150,7 @@ class PlotStations(QtWidgets.QWidget):
             pickradius=10,
             **self.marker_dict,
         )
-
+        self.text_offset = self.get_text_pad(self.station_locations.latitude)
         for station, x, y in zip(
             self.station_locations.station,
             self.station_locations.longitude,
@@ -165,7 +161,7 @@ class PlotStations(QtWidgets.QWidget):
                 xy=(x, y),
                 ha=self.text_dict["ha"],
                 va=self.text_dict["va"],
-                xytext=(x, y + self.text_y_pad),
+                xytext=(x, y + self.text_offset),
                 color=self.text_dict["color"],
                 fontsize=self.text_dict["size"],
                 fontweight=self.text_dict["weight"],
