@@ -15,7 +15,7 @@ Created on Tue Jan 19 22:47:32 2021
 import sys
 
 try:
-    from PyQt5 import QtCore, QtWidgets, QtGui
+    from PyQt5 import QtCore, QtWidgets
 except ImportError:
     raise ImportError("This version needs PyQt5")
 
@@ -27,6 +27,7 @@ except ModuleNotFoundError:
     has_cx = False
 
 import numpy as np
+from pyproj import CRS
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import (
@@ -52,7 +53,7 @@ class PlotStations(QtWidgets.QWidget):
         self.current_station = None
         self.current_index = 0
         self.previous_index = 0
-        self.text_offset = 0.001
+        self.text_offset = 0.0015
         self.marker_dict = {
             "ls": "None",
             "ms": 4,
@@ -83,6 +84,12 @@ class PlotStations(QtWidgets.QWidget):
             "ha": "center",
             "va": "baseline",
         }
+
+        self.cx_source = None
+        self.cx_zoom = None
+        self.map_crs = CRS.from_epsg(4326)
+        if has_cx:
+            self.cx_source = cx.providers.USGS.USTopo
 
         super().__init__()
         self.setup_ui()
@@ -153,12 +160,31 @@ class PlotStations(QtWidgets.QWidget):
             self.station_locations.longitude,
             self.station_locations.latitude,
         ):
-            self.ax.text(
-                x,
-                y + self.text_offset * np.sign(y),
+            self.ax.annotate(
                 station,
-                fontdict=self.text_dict,
+                xy=(x, y),
+                ha=self.text_dict["ha"],
+                va=self.text_dict["va"],
+                xytext=(x, y + self.text_y_pad),
+                color=self.text_dict["color"],
+                fontsize=self.text_dict["size"],
+                fontweight=self.text_dict["weight"],
             )
+
+        if has_cx:
+            try:
+                cx_kwargs = {
+                    "crs": self.map_crs.to_string(),
+                    "source": self.cx_source,
+                }
+                if self.cx_zoom is not None:
+                    cx_kwargs["zoom"] = self.cx_zoom
+                cx.add_basemap(
+                    self.ax,
+                    **cx_kwargs,
+                )
+            except Exception as error:
+                self.logger.warning(f"Could not add base map because {error}")
 
         # set axis properties
         self.ax.set_xlabel(xlabel, fontdict=label_font_dict)

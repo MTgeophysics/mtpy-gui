@@ -105,7 +105,7 @@ class PlotResponses(QtWidgets.QWidget):
 
         # create new modem data object
         self.modem_data = MTData()
-        self.modem_data.from_modem_data(self._data_fn)
+        self.modem_data.from_modem(self._data_fn)
         self.periods = self.modem_data.get_periods()
 
         # make a back up copy that will be unchanged
@@ -137,7 +137,7 @@ class PlotResponses(QtWidgets.QWidget):
         self._resp_fn = Path(resp_fn)
         self.modem_resp = MTData()
 
-        self.modem_resp.from_modem_data(self._resp_fn, file_type="response")
+        self.modem_resp.from_modem(self._resp_fn, file_type="response")
         self.plot()
 
     @staticmethod
