@@ -62,6 +62,7 @@ class PlotResponses(QtWidgets.QWidget):
 
         self.modem_data = None
         self.modem_resp = None
+        self._resp_survey = "model"
 
         self.station = None
         self.resp_station = None
@@ -137,7 +138,7 @@ class PlotResponses(QtWidgets.QWidget):
         self._resp_fn = Path(resp_fn)
         self.modem_resp = MTData()
 
-        self.modem_resp.from_modem(self._resp_fn, file_type="response")
+        self.modem_resp.from_modem(self._resp_fn, survey=self._resp_survey)
         self.plot()
 
     @staticmethod
@@ -183,7 +184,7 @@ class PlotResponses(QtWidgets.QWidget):
 
         self.flip_phase_combo = QtWidgets.QComboBox()
         self.flip_phase_combo.addItems(
-            ["", "Zxx", "Zxy", "Zyx", "Zyy", "Tx", "Ty"]
+            ["", "Zxx", "Zxy", "Zyx", "Zyy", "Tzx", "Tzy"]
         )
         self.flip_phase_combo.currentIndexChanged.connect(
             self.set_phase_flip_comp
@@ -199,7 +200,7 @@ class PlotResponses(QtWidgets.QWidget):
 
         self.add_error_combo = QtWidgets.QComboBox()
         self.add_error_combo.addItems(
-            ["", "Zxx", "Zxy", "Zyx", "Zyy", "Tx", "Ty"]
+            ["", "Zxx", "Zxy", "Zyx", "Zyy", "Tzx", "Tzy"]
         )
         self.add_error_combo.currentIndexChanged.connect(self.set_error_comp)
         add_error_layout = QtWidgets.QHBoxLayout()
@@ -733,7 +734,7 @@ class PlotResponses(QtWidgets.QWidget):
         # ----------------------------------------------
         # plot model response
         if self.modem_resp is not None:
-            self.resp_station = self.station.replace("data", "model")
+            self.resp_station = self.station.replace("data", self._resp_survey)
             try:
                 # find locations where points have been masked
                 if self.modem_resp[self.resp_station].has_impedance():
@@ -770,7 +771,7 @@ class PlotResponses(QtWidgets.QWidget):
                     with np.errstate(divide="ignore", invalid="ignore"):
                         resp_t_err = np.nan_to_num(
                             (t_obj.tipper[t_index] - resp_t_obj.tipper)
-                            / t_obj.tipper_model_error
+                            / t_obj.tipper_model_error[t_index]
                         )
 
                     ntx_r = np.nonzero(resp_t_obj.tipper[:, 0, 0])[0]
@@ -785,7 +786,7 @@ class PlotResponses(QtWidgets.QWidget):
                                 f"No Tipper in Response for {self.resp_station}"
                             )
             except KeyError:
-                print(f"Could not find {self.station} in .resp file")
+                print(f"Could not find {self.resp_station} in .resp file")
                 self.mpl_widget.draw()
                 return
 

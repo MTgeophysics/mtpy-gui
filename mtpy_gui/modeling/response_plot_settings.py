@@ -9,12 +9,12 @@ Created on Fri Jan 15 11:50:39 2021
 
 """
 
+
 # ==============================================================================
 #  Plot setting
 # ==============================================================================
 class PlotSettings(object):
     def __init__(self, **kwargs):
-
         self.fs = kwargs.pop("fs", 10)
         self.lw = kwargs.pop("lw", 1.5)
         self.ms = kwargs.pop("ms", 5)
@@ -39,12 +39,12 @@ class PlotSettings(object):
         self.res_yx_limits = kwargs.pop("res_yx_limits", None)
         self.res_yy_limits = kwargs.pop("res_yy_limits", None)
 
-        self.phase_xx_limits = kwargs.pop("phase_xx_limits", None)
-        self.phase_xy_limits = kwargs.pop("phase_xy_limits", None)
-        self.phase_yx_limits = kwargs.pop("phase_yx_limits", None)
-        self.phase_yy_limits = kwargs.pop("phase_yy_limits", None)
+        self.phase_xx_limits = kwargs.pop("phase_xx_limits", (-180, 180))
+        self.phase_xy_limits = kwargs.pop("phase_xy_limits", (-5, 95))
+        self.phase_yx_limits = kwargs.pop("phase_yx_limits", (-185, -85))
+        self.phase_yy_limits = kwargs.pop("phase_yy_limits", (-180, 180))
 
-        self.tipper_limits = kwargs.pop("tipper_limits", (-1.1, 1.1))
+        self.tipper_limits = kwargs.pop("tipper_limits", (-0.5, 0.5))
 
         self.subplot_wspace = kwargs.pop("subplot_wspace", 0.2)
         self.subplot_hspace = kwargs.pop("subplot_hspace", 0.0)
@@ -59,9 +59,13 @@ class PlotSettings(object):
         self.legend_loc = kwargs.pop("legend_loc", "upper left")
         self.legend_pos = kwargs.pop("legend_pos", None)
         self.legend_marker_scale = kwargs.pop("legend_marker_scale", 1)
-        self.legend_border_axes_pad = kwargs.pop("legend_border_axes_pad", 0.01)
+        self.legend_border_axes_pad = kwargs.pop(
+            "legend_border_axes_pad", 0.01
+        )
         self.legend_label_spacing = kwargs.pop("legend_label_spacing", 0.07)
-        self.legend_handle_text_pad = kwargs.pop("legend_handle_text_pad", 0.05)
+        self.legend_handle_text_pad = kwargs.pop(
+            "legend_handle_text_pad", 0.05
+        )
         self.legend_border_pad = kwargs.pop("legend_border_pad", 0.05)
 
         self.ylabel_pad = 1.25
