@@ -20,8 +20,9 @@ try:
 except ImportError:
     raise ImportError("This version needs PyQt5")
 
-from mtpy.gui.my_stream import MyStream
+from mtpy_gui.modeling.my_stream import MyStream
 from mtpy import MT
+
 
 # ==============================================================================
 class Rotate_EDI_Files(QtWidgets.QWidget):
@@ -108,9 +109,7 @@ class Rotate_EDI_Files(QtWidgets.QWidget):
     def get_cwd(self):
         dir_dialog = QtWidgets.QFileDialog()
         self.cwd = Path(
-            str(
-                dir_dialog.getExistingDirectory(caption="Choose EDI Directory")
-            )
+            str(dir_dialog.getExistingDirectory(caption="Choose EDI Directory"))
         )
         self.cwd_edit.setText(self.cwd.as_posix())
         self.set_edi_list()

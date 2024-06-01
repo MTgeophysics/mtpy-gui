@@ -366,6 +366,7 @@ class ModelWidget(QtWidgets.QWidget):
 
         self._data_fn = None
         self._model_fn = None
+        self.station_locations = None
 
         self.map_index = 0
         self.east_index = 0
@@ -436,7 +437,9 @@ class ModelWidget(QtWidgets.QWidget):
         self.map_copy_number_edit = QtWidgets.QLineEdit()
         self.map_copy_number_edit.setText("{0:0.0f}".format(self.map_copy_num))
         self.map_copy_number_edit.setMaximumWidth(35)
-        self.map_copy_number_edit.editingFinished.connect(self.set_map_copy_num)
+        self.map_copy_number_edit.editingFinished.connect(
+            self.set_map_copy_num
+        )
         self.map_copy_number_label = QtWidgets.QLabel("N")
 
         self.map_depth_label = QtWidgets.QLabel(
@@ -713,7 +716,9 @@ class ModelWidget(QtWidgets.QWidget):
         self.north_slider.setMaximum(self.model_obj.plot_north.size - 1)
 
         self.east_label.setText("{0:.2f}".format(self.model_obj.grid_east[0]))
-        self.north_label.setText("{0:.2f}".format(self.model_obj.grid_north[0]))
+        self.north_label.setText(
+            "{0:.2f}".format(self.model_obj.grid_north[0])
+        )
 
         ##--------------plot the model-----------------------------------------
         ## get the grid coordinates first
@@ -817,7 +822,8 @@ class ModelWidget(QtWidgets.QWidget):
         self.location_ax.set_xlim(
             (
                 self.model_obj.grid_east[self.model_obj.pad_east] / self.scale,
-                self.model_obj.grid_east[-self.model_obj.pad_east] / self.scale,
+                self.model_obj.grid_east[-self.model_obj.pad_east]
+                / self.scale,
             )
         )
         self.location_ax.set_ylim(
@@ -854,7 +860,7 @@ class ModelWidget(QtWidgets.QWidget):
             "b",
             lw=2,
         )[0]
-        if self.data_fn is not None:
+        if self.station_locations is not None:
             self.location_ax.scatter(
                 self.station_locations.model_east / self.scale,
                 self.station_locations.model_north / self.scale,
@@ -941,7 +947,9 @@ class ModelWidget(QtWidgets.QWidget):
                 ]
             )
             self.map_north_line_xlist.append(None)
-            self.map_north_line_ylist.extend([yy / self.scale, yy / self.scale])
+            self.map_north_line_ylist.extend(
+                [yy / self.scale, yy / self.scale]
+            )
             self.map_north_line_ylist.append(None)
 
         ##--> NS cross section that move E-W
@@ -1008,7 +1016,9 @@ class ModelWidget(QtWidgets.QWidget):
             self.res_limits[1],
             (self.res_limits[1] - self.res_limits[0]) / 256.0,
         )
-        self.cb_x, self.cb_y = np.meshgrid(np.array([0, 1]), res, indexing="ij")
+        self.cb_x, self.cb_y = np.meshgrid(
+            np.array([0, 1]), res, indexing="ij"
+        )
         self.cb_bar = np.zeros((2, 256))
         self.cb_bar[:, :] = res
 
@@ -1058,7 +1068,7 @@ class ModelWidget(QtWidgets.QWidget):
             vmin=self.res_limits[0],
             vmax=self.res_limits[1],
         )
-        if self.data_fn is not None:
+        if self.station_locations is not None:
             self.map_ax.scatter(
                 self.station_locations.model_east / self.scale,
                 self.station_locations.model_north / self.scale,
@@ -1191,7 +1201,8 @@ class ModelWidget(QtWidgets.QWidget):
         self.location_ax.set_xlim(
             (
                 self.model_obj.grid_east[self.model_obj.pad_east] / self.scale,
-                self.model_obj.grid_east[-self.model_obj.pad_east] / self.scale,
+                self.model_obj.grid_east[-self.model_obj.pad_east]
+                / self.scale,
             )
         )
         self.location_ax.set_ylim(
@@ -1203,7 +1214,7 @@ class ModelWidget(QtWidgets.QWidget):
             )
         )
 
-        if self.data_fn is not None:
+        if self.station_locations is not None:
             self.location_ax.scatter(
                 self.station_locations.model_east / self.scale,
                 self.station_locations.model_north / self.scale,
@@ -1338,7 +1349,7 @@ class ModelWidget(QtWidgets.QWidget):
             self.model_obj.grid_north[self.north_index]
             + self.model_obj.cell_size_north
         )
-        if self.data_fn is not None:
+        if self.station_locations is not None:
             return self.station_locations.loc[
                 (self.station_locations.model_north >= ymin)
                 & (self.station_locations.model_north <= ymax)
@@ -1363,7 +1374,7 @@ class ModelWidget(QtWidgets.QWidget):
             self.model_obj.grid_east[self.east_index]
             + self.model_obj.cell_size_east
         )
-        if self.data_fn is not None:
+        if self.station_locations is not None:
             return self.station_locations.loc[
                 (self.station_locations.model_east >= xmin)
                 & (self.station_locations.model_east <= xmax)
@@ -1444,7 +1455,9 @@ class ModelWidget(QtWidgets.QWidget):
         for xx in x_change:
             for yy in y_change:
                 if self.model_obj.res_model[xx, self.east_index, yy] < 1e10:
-                    self.new_res_model[xx, self.east_index, yy] = self.res_value
+                    self.new_res_model[
+                        xx, self.east_index, yy
+                    ] = self.res_value
 
         self.redraw_plots()
 
@@ -1769,7 +1782,9 @@ class ModelWidget(QtWidgets.QWidget):
         self.east_copy_num = int(
             round(float(str(self.east_copy_number_edit.text())))
         )
-        self.east_copy_number_edit.setText("{0:.0f}".format(self.east_copy_num))
+        self.east_copy_number_edit.setText(
+            "{0:.0f}".format(self.east_copy_num)
+        )
 
     def north_copy_south(self):
         """

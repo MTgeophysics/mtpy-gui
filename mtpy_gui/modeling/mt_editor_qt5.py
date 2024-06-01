@@ -1592,20 +1592,7 @@ class PlotWidget(QtWidgets.QWidget):
                         # print("no diagonal phase", error)
                         pass
 
-                self.mt_obj._transfer_function.transfer_function.loc[
-                    {
-                        "output": self._z_output_dict[comp_jj],
-                        "input": self._input_dict[comp_kk],
-                    }
-                ][f_index] = (
-                    np.nan + 1j * np.nan
-                )
-                self.mt_obj._transfer_function.transfer_function_error.loc[
-                    {
-                        "output": self._z_output_dict[comp_jj],
-                        "input": self._input_dict[comp_kk],
-                    }
-                ][f_index] = np.nan
+                self.delete_point_z(f_index, comp_jj, comp_kk)
 
             # mask phase points
             elif self._ax_index == 2 or self._ax_index == 3:
@@ -1644,20 +1631,7 @@ class PlotWidget(QtWidgets.QWidget):
                         print("no phase axis", error)
                         return
 
-                self.mt_obj._transfer_function.transfer_function.loc[
-                    {
-                        "output": self._z_output_dict[comp_jj],
-                        "input": self._input_dict[comp_kk],
-                    }
-                ][f_index] = (
-                    np.nan + 1j * np.nan
-                )
-                self.mt_obj._transfer_function.transfer_function_error.loc[
-                    {
-                        "output": self._z_output_dict[comp_jj],
-                        "input": self._input_dict[comp_kk],
-                    }
-                ][f_index] = np.nan
+                self.delete_point_z(f_index, comp_jj, comp_kk)
 
                 # mask resistivity as well
                 if self._ax_index == 2:
@@ -1700,26 +1674,41 @@ class PlotWidget(QtWidgets.QWidget):
                     # print("no tipper", error)
                     return
 
-                self.mt_obj._transfer_function.transfer_function.loc[
-                    {
-                        "output": self._t_output_dict[comp_jj],
-                        "input": self._input_dict[comp_kk],
-                    }
-                ][f_index] = (
-                    np.nan + 1j * np.nan
-                )
-                self.mt_obj._transfer_function.transfer_function_error.loc[
-                    {
-                        "output": self._t_output_dict[comp_jj],
-                        "input": self._input_dict[comp_kk],
-                    }
-                ][f_index] = np.nan
-
-                # set tipper data to 0
-                self.mt_obj.Tipper.tipper[d_index] = 0.0 + 0.0j
-                self.mt_obj.Tipper.tipper_error[d_index] = 0.0
+                self.delete_point_tipper(f_index, comp_jj, comp_kk)
 
             self._ax.figure.canvas.draw()
+
+    def delete_point_tipper(self, f_index, comp_jj, comp_kk):
+        self.mt_obj._transfer_function.transfer_function.loc[
+            {
+                "output": self._t_output_dict[comp_jj],
+                "input": self._input_dict[comp_kk],
+            }
+        ][f_index] = (
+            np.nan + 1j * np.nan
+        )
+        self.mt_obj._transfer_function.transfer_function_error.loc[
+            {
+                "output": self._t_output_dict[comp_jj],
+                "input": self._input_dict[comp_kk],
+            }
+        ][f_index] = np.nan
+
+    def delete_point_z(self, f_index, comp_jj, comp_kk):
+        self.mt_obj._transfer_function.transfer_function.loc[
+            {
+                "output": self._z_output_dict[comp_jj],
+                "input": self._input_dict[comp_kk],
+            }
+        ][f_index] = (
+            np.nan + 1j * np.nan
+        )
+        self.mt_obj._transfer_function.transfer_function_error.loc[
+            {
+                "output": self._z_output_dict[comp_jj],
+                "input": self._input_dict[comp_kk],
+            }
+        ][f_index] = np.nan
 
     def in_axes(self, event):
         """
@@ -1746,37 +1735,37 @@ class PlotWidget(QtWidgets.QWidget):
         x1 = eclick.xdata
         x2 = erelease.xdata
 
-        f_idx = self._get_frequency_range(x1, x2)
+        f_idx = self._get_frequency_range(x1, x2)[0]
 
-        for ff in f_idx:
-            data_period = 1.0 / self.mt_obj.frequency[ff]
-            if self.edits_mode == "Both" or self.edits_mode == "X":
-                self.ax_res_od.plot(
-                    data_period,
-                    self.mt_obj.Z.resistivity[ff, 0, 1],
-                    **self.mask_kw,
-                )
-                self.ax_phase_od.plot(
-                    data_period, self.mt_obj.Z.phase[ff, 0, 1], **self.mask_kw
-                )
-                self.mt_obj.Z.z[ff, 0, 1] = 0.0 + 0.0 * 1j
-                self.mt_obj.Z.z_error[ff, 0, 1] = 0.0
+        data_period = self.mt_obj.period[f_idx]
+        if self.edits_mode == "Both" or self.edits_mode == "X":
+            self.ax_res_od.plot(
+                data_period,
+                self.mt_obj.Z.resistivity[f_idx, 1, 0],
+                **self.mask_kw,
+            )
 
-            if self.edits_mode == "Both" or self.edits_mode == "Y":
-                self.ax_res_od.plot(
-                    data_period,
-                    self.mt_obj.Z.resistivity[ff, 1, 0],
-                    **self.mask_kw,
-                )
+            self.ax_phase_od.plot(
+                data_period,
+                self.mt_obj.Z.phase[f_idx, 1, 0] + 180,
+                **self.mask_kw,
+            )
+            self.delete_point_z(f_idx, 0, 1)
 
-                self.ax_phase_od.plot(
-                    data_period,
-                    self.mt_obj.Z.phase[ff, 1, 0] + 180,
-                    **self.mask_kw,
-                )
+        if self.edits_mode == "Both" or self.edits_mode == "Y":
+            self.ax_res_od.plot(
+                data_period,
+                self.mt_obj.Z.resistivity[f_idx, 1, 0],
+                **self.mask_kw,
+            )
 
-                self.mt_obj.Z.z[ff, 1, 0] = 0.0 + 0.0 * 1j
-                self.mt_obj.Z.z_error[ff, 1, 0] = 0.0
+            self.ax_phase_od.plot(
+                data_period,
+                self.mt_obj.Z.phase[f_idx, 1, 0] + 180,
+                **self.mask_kw,
+            )
+
+            self.delete_point_z(f_idx, 1, 0)
 
         self.ax_res_od.figure.canvas.draw()
         self.ax_phase_od.figure.canvas.draw()
@@ -1785,35 +1774,32 @@ class PlotWidget(QtWidgets.QWidget):
         x1 = eclick.xdata
         x2 = erelease.xdata
 
-        f_idx = self._get_frequency_range(x1, x2)
+        f_idx = self._get_frequency_range(x1, x2)[0]
 
-        for ff in f_idx:
-            data_period = 1.0 / self.mt_obj.frequency[ff]
-            if self.edits_mode == "Both" or self.edits_mode == "X":
-                self.ax_res_d.plot(
-                    data_period,
-                    self.mt_obj.Z.resistivity[ff, 0, 0],
-                    **self.mask_kw,
-                )
-                self.ax_phase_d.plot(
-                    data_period, self.mt_obj.Z.phase[ff, 0, 0], **self.mask_kw
-                )
-                self.mt_obj.Z.z[ff, 0, 0] = 0.0 + 0.0 * 1j
-                self.mt_obj.Z.z_error[ff, 0, 0] = 0.0
+        data_period = self.mt_obj.period[f_idx]
+        if self.edits_mode == "Both" or self.edits_mode == "X":
+            self.ax_res_d.plot(
+                data_period,
+                self.mt_obj.Z.resistivity[f_idx, 0, 0],
+                **self.mask_kw,
+            )
+            self.ax_phase_d.plot(
+                data_period, self.mt_obj.Z.phase[f_idx, 0, 0], **self.mask_kw
+            )
+            self.delete_point_z(f_idx, 0, 0)
 
-            if self.edits_mode == "Both" or self.edits_mode == "Y":
-                self.ax_res_d.plot(
-                    data_period,
-                    self.mt_obj.Z.resistivity[ff, 1, 1],
-                    **self.mask_kw,
-                )
+        if self.edits_mode == "Both" or self.edits_mode == "Y":
+            self.ax_res_d.plot(
+                data_period,
+                self.mt_obj.Z.resistivity[f_idx, 1, 1],
+                **self.mask_kw,
+            )
 
-                self.ax_phase_d.plot(
-                    data_period, self.mt_obj.Z.phase[ff, 1, 1], **self.mask_kw
-                )
+            self.ax_phase_d.plot(
+                data_period, self.mt_obj.Z.phase[f_idx, 1, 1], **self.mask_kw
+            )
 
-                self.mt_obj.Z.z[ff, 1, 1] = 0.0 + 0.0 * 1j
-                self.mt_obj.Z.z_error[ff, 1, 1] = 0.0
+            self.delete_point_z(f_idx, 1, 1)
 
         self.ax_res_od.figure.canvas.draw()
         self.ax_phase_od.figure.canvas.draw()
@@ -1823,23 +1809,19 @@ class PlotWidget(QtWidgets.QWidget):
         x2 = erelease.xdata
 
         try:
-            f_idx = self._get_frequency_range(x1, x2)
+            f_idx = self._get_frequency_range(x1, x2)[0]
         except ZeroDivisionError:
             print("***Picked Invalid Points***")
             return
 
-        for ff in f_idx:
-            data_period = 1.0 / self.mt_obj.frequency[ff]
-            self.ax_tip_x.plot(
-                data_period,
-                self.mt_obj.Tipper.amplitude[ff, 0, 0],
-                **self.mask_kw,
-            )
+        data_period = self.mt_obj.period[f_idx]
+        self.ax_tip_x.plot(
+            data_period,
+            self.mt_obj.Tipper.amplitude[f_idx, 0, 0],
+            **self.mask_kw,
+        )
 
-            self.mt_obj.Tipper.tipper[ff, 0, 0] = 0.0 + 0.0 * 1j
-            self.mt_obj.Tipper.tipper_error[ff, 0, 0] = 0.0
-
-        self.mt_obj.Tipper.compute_amp_phase()
+        self.delete_point_tipper(f_idx, 0, 0)
 
         self.ax_tip_x.figure.canvas.draw()
 
@@ -1847,20 +1829,20 @@ class PlotWidget(QtWidgets.QWidget):
         x1 = eclick.xdata
         x2 = erelease.xdata
 
-        f_idx = self._get_frequency_range(x1, x2)
+        try:
+            f_idx = self._get_frequency_range(x1, x2)[0]
+        except ZeroDivisionError:
+            print("***Picked Invalid Points***")
+            return
 
-        for ff in f_idx:
-            data_period = 1.0 / self.mt_obj.frequency[ff]
-            self.ax_tip_y.plot(
-                data_period,
-                self.mt_obj.Tipper.amplitude[ff, 0, 1],
-                **self.mask_kw,
-            )
+        data_period = self.mt_obj.period[f_idx]
+        self.ax_tip_x.plot(
+            data_period,
+            self.mt_obj.Tipper.amplitude[f_idx, 0, 1],
+            **self.mask_kw,
+        )
 
-            self.mt_obj.Tipper.tipper[ff, 0, 1] = 0.0 + 0.0 * 1j
-            self.mt_obj.Tipper.tipper_error[ff, 0, 1] = 0.0
-
-        self.mt_obj.Tipper.compute_amp_phase()
+        self.delete_point_tipper(f_idx, 0, 1)
 
         self.ax_tip_y.figure.canvas.draw()
 
