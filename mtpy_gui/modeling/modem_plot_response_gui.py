@@ -863,7 +863,7 @@ class PlotResponses(QtWidgets.QWidget):
                 line_list[4] += [rertx[0]]
                 line_list[5] += [rerty[0]]
                 label_list[4] += ["$T^m_{x}$ " + f"rms={rms_tx:.2f}"]
-                label_list[5] += ["$T^m_{x}$ " + f"rms={rms_ty:.2f}"]
+                label_list[5] += ["$T^m_{y}$ " + f"rms={rms_ty:.2f}"]
 
             legend_ax_list = self.ax_list[0:4]
             if self.plot_tipper == True:
