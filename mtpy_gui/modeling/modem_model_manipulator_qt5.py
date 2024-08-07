@@ -38,6 +38,8 @@ try:
 except ModuleNotFoundError:
     has_cx = False
 
+from pyproj import CRS
+
 from mtpy import MTData
 from mtpy.modeling import StructuredGrid3D
 
@@ -400,13 +402,14 @@ class ModelWidget(QtWidgets.QWidget):
         self.avg_pad = 12
 
         self.cmap = "jet_r"
-        self._res_limits = (0, 4)
+        self._res_limits = (0.3, 3)
         self.map_copy_num = 1
         self.east_copy_num = 1
         self.north_copy_num = 1
 
         self.cx_source = None
         self.cx_zoom = None
+        self.map_crs = CRS.from_epsg(4326)
         if has_cx:
             self.cx_source = cx.providers.USGS.USTopo
 
@@ -437,9 +440,7 @@ class ModelWidget(QtWidgets.QWidget):
         self.map_copy_number_edit = QtWidgets.QLineEdit()
         self.map_copy_number_edit.setText("{0:0.0f}".format(self.map_copy_num))
         self.map_copy_number_edit.setMaximumWidth(35)
-        self.map_copy_number_edit.editingFinished.connect(
-            self.set_map_copy_num
-        )
+        self.map_copy_number_edit.editingFinished.connect(self.set_map_copy_num)
         self.map_copy_number_label = QtWidgets.QLabel("N")
 
         self.map_depth_label = QtWidgets.QLabel(
@@ -686,6 +687,7 @@ class ModelWidget(QtWidgets.QWidget):
 
         self.data_obj = MTData()
         self.data_obj.from_modem(self._data_fn)
+        self.map_crs = self.data_obj.utm_crs
         # dataframe of station locations
         self.station_locations = self.data_obj.station_locations
 
@@ -716,9 +718,7 @@ class ModelWidget(QtWidgets.QWidget):
         self.north_slider.setMaximum(self.model_obj.plot_north.size - 1)
 
         self.east_label.setText("{0:.2f}".format(self.model_obj.grid_east[0]))
-        self.north_label.setText(
-            "{0:.2f}".format(self.model_obj.grid_north[0])
-        )
+        self.north_label.setText("{0:.2f}".format(self.model_obj.grid_north[0]))
 
         ##--------------plot the model-----------------------------------------
         ## get the grid coordinates first
@@ -822,8 +822,7 @@ class ModelWidget(QtWidgets.QWidget):
         self.location_ax.set_xlim(
             (
                 self.model_obj.grid_east[self.model_obj.pad_east] / self.scale,
-                self.model_obj.grid_east[-self.model_obj.pad_east]
-                / self.scale,
+                self.model_obj.grid_east[-self.model_obj.pad_east] / self.scale,
             )
         )
         self.location_ax.set_ylim(
@@ -947,9 +946,7 @@ class ModelWidget(QtWidgets.QWidget):
                 ]
             )
             self.map_north_line_xlist.append(None)
-            self.map_north_line_ylist.extend(
-                [yy / self.scale, yy / self.scale]
-            )
+            self.map_north_line_ylist.extend([yy / self.scale, yy / self.scale])
             self.map_north_line_ylist.append(None)
 
         ##--> NS cross section that move E-W
@@ -1016,9 +1013,7 @@ class ModelWidget(QtWidgets.QWidget):
             self.res_limits[1],
             (self.res_limits[1] - self.res_limits[0]) / 256.0,
         )
-        self.cb_x, self.cb_y = np.meshgrid(
-            np.array([0, 1]), res, indexing="ij"
-        )
+        self.cb_x, self.cb_y = np.meshgrid(np.array([0, 1]), res, indexing="ij")
         self.cb_bar = np.zeros((2, 256))
         self.cb_bar[:, :] = res
 
@@ -1201,8 +1196,7 @@ class ModelWidget(QtWidgets.QWidget):
         self.location_ax.set_xlim(
             (
                 self.model_obj.grid_east[self.model_obj.pad_east] / self.scale,
-                self.model_obj.grid_east[-self.model_obj.pad_east]
-                / self.scale,
+                self.model_obj.grid_east[-self.model_obj.pad_east] / self.scale,
             )
         )
         self.location_ax.set_ylim(
@@ -1455,9 +1449,7 @@ class ModelWidget(QtWidgets.QWidget):
         for xx in x_change:
             for yy in y_change:
                 if self.model_obj.res_model[xx, self.east_index, yy] < 1e10:
-                    self.new_res_model[
-                        xx, self.east_index, yy
-                    ] = self.res_value
+                    self.new_res_model[xx, self.east_index, yy] = self.res_value
 
         self.redraw_plots()
 
@@ -1475,9 +1467,9 @@ class ModelWidget(QtWidgets.QWidget):
         for xx in x_change:
             for yy in y_change:
                 if self.model_obj.res_model[self.north_index, xx, yy] < 1e10:
-                    self.new_res_model[
-                        self.north_index, xx, yy
-                    ] = self.res_value
+                    self.new_res_model[self.north_index, xx, yy] = (
+                        self.res_value
+                    )
 
         self.redraw_plots()
 
@@ -1706,9 +1698,9 @@ class ModelWidget(QtWidgets.QWidget):
         #            self.new_res_model[nax] =
         #        na_index = np.where(self.new_res_model[:, :, self.map_index] < 1E10)
         #        print(na_index)
-        self.new_res_model[
-            :, :, self.map_index : copy_index
-        ] = self.new_res_model[:, :, self.map_index].reshape(o_shape)
+        self.new_res_model[:, :, self.map_index : copy_index] = (
+            self.new_res_model[:, :, self.map_index].reshape(o_shape)
+        )
 
         # self.new_res_model[np.where(self.model_obj.res_model > 1E10)] = 1E12
 
@@ -1723,9 +1715,9 @@ class ModelWidget(QtWidgets.QWidget):
         copy_index = self.map_index - (self.map_copy_num + 1)
         if copy_index < 0:
             copy_index = 0
-        self.new_res_model[
-            :, :, copy_index : self.map_index
-        ] = self.new_res_model[:, :, self.map_index].reshape(o_shape)
+        self.new_res_model[:, :, copy_index : self.map_index] = (
+            self.new_res_model[:, :, self.map_index].reshape(o_shape)
+        )
         self.new_res_model[np.where(self.model_obj.res_model > 1e10)] = 1e12
 
         self.redraw_plots()
@@ -1749,9 +1741,9 @@ class ModelWidget(QtWidgets.QWidget):
         if copy_index > self.new_res_model.shape[1]:
             copy_index = self.new_res_model.shape[1]
 
-        self.new_res_model[
-            :, self.east_index : copy_index, :
-        ] = self.new_res_model[:, self.east_index, :].reshape(o_shape)
+        self.new_res_model[:, self.east_index : copy_index, :] = (
+            self.new_res_model[:, self.east_index, :].reshape(o_shape)
+        )
 
         self.new_res_model[np.where(self.model_obj.res_model > 1e10)] = 1e12
 
@@ -1767,9 +1759,9 @@ class ModelWidget(QtWidgets.QWidget):
         if copy_index < 0:
             copy_index = 0
 
-        self.new_res_model[
-            :, copy_index : self.east_index, :
-        ] = self.new_res_model[:, self.east_index, :].reshape(o_shape)
+        self.new_res_model[:, copy_index : self.east_index, :] = (
+            self.new_res_model[:, self.east_index, :].reshape(o_shape)
+        )
 
         self.new_res_model[np.where(self.model_obj.res_model > 1e10)] = 1e12
 
@@ -1782,9 +1774,7 @@ class ModelWidget(QtWidgets.QWidget):
         self.east_copy_num = int(
             round(float(str(self.east_copy_number_edit.text())))
         )
-        self.east_copy_number_edit.setText(
-            "{0:.0f}".format(self.east_copy_num)
-        )
+        self.east_copy_number_edit.setText("{0:.0f}".format(self.east_copy_num))
 
     def north_copy_south(self):
         """
@@ -1796,9 +1786,9 @@ class ModelWidget(QtWidgets.QWidget):
         if copy_index > self.new_res_model.shape[0]:
             copy_index = self.new_res_model.shape[0]
 
-        self.new_res_model[
-            copy_index : self.north_index, :, :
-        ] = self.new_res_model[self.north_index, :, :].reshape(o_shape)
+        self.new_res_model[copy_index : self.north_index, :, :] = (
+            self.new_res_model[self.north_index, :, :].reshape(o_shape)
+        )
         self.new_res_model[np.where(self.model_obj.res_model > 1e10)] = 1e12
 
         self.redraw_plots()
@@ -1813,9 +1803,9 @@ class ModelWidget(QtWidgets.QWidget):
         if copy_index > self.new_res_model.shape[0]:
             copy_index = self.new_res_model.shape[0]
 
-        self.new_res_model[
-            self.north_index : copy_index :, :, :
-        ] = self.new_res_model[self.north_index, :, :].reshape(o_shape)
+        self.new_res_model[self.north_index : copy_index :, :, :] = (
+            self.new_res_model[self.north_index, :, :].reshape(o_shape)
+        )
         self.new_res_model[np.where(self.model_obj.res_model > 1e10)] = 1e12
 
         self.redraw_plots()
