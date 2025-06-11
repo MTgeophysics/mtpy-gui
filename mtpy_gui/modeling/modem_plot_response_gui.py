@@ -328,7 +328,7 @@ class PlotResponses(QtWidgets.QWidget):
         print(f"{'='*10} interpolating {self.station} {'='*10}")
 
         self.modem_data[self.station] = self.modem_data[self.station].interpolate(
-            self.modem_periods, bounds_error=False, z_log_space=False
+            self.modem_periods, bounds_error=False
         )
 
         self.plot()
