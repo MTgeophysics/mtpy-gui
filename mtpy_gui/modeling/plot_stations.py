@@ -181,7 +181,7 @@ class PlotStations(QtWidgets.QWidget):
                     **cx_kwargs,
                 )
             except Exception as error:
-                self.logger.warning(f"Could not add base map because {error}")
+               print(f"Could not add base map because {error}")
 
         # set axis properties
         self.ax.set_xlabel(xlabel, fontdict=label_font_dict)
