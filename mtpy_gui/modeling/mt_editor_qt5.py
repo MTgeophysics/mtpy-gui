@@ -974,6 +974,7 @@ class PlotWidget(QtWidgets.QWidget):
                 )[0]
             )
         )
+
         self.mt_obj.write(save_fn)
 
     @QtCore.pyqtSlot(str)
