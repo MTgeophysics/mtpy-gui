@@ -47,10 +47,10 @@ setup(name='MtPy_gui',
         'qdarkstyle', 
         'pyvistaqt'
     ],
-    entry_points = {
-         'console_scripts':[
-             'MtPy_gui=mtpy_gui:main'
-         ],
-     }
+    #entry_points = {
+    #     'console_scripts':[
+    #         'MtPy_gui=mtpy_gui:main'
+    #     ],
+    # }
 )
 
