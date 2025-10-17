@@ -42,7 +42,7 @@ setup(name='MtPy_gui',
     author='Bennett Hoogenboom',
     author_email='bhooogenboom@usgs.gov',
     install_requires=[
-        'MtPy', 
+        'mtpy-v2', 
         'pyqt5', 
         'qdarkstyle', 
         'pyvistaqt'
