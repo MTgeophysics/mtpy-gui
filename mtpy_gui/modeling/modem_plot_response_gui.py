@@ -43,6 +43,7 @@ from mtpy.imaging.mtplot_tools.plotters import (
 )
 
 from .response_plot_settings import PlotSettings
+from matplotlib import __version__ as mpl_version
 
 # ==============================================================================
 # plot part
@@ -468,8 +469,12 @@ class PlotResponses(QtWidgets.QWidget):
         self.plot_z = self.modem_data[self.station].has_impedance()
         h_ratio = [1.5, 1, 0.5]
 
-        plt.rcParams["font.size"] = self.plot_settings.fs
-        fontdict = {"fontsize": self.plot_settings.fs + 2, "fontweight": "bold"}
+        plt.rcParams["font.size"] = self.plot_settings.fs\
+        
+        if mpl_version <= "3.6":
+            fontdict = {"fontsize": self.plot_settings.fs + 2, "fontweight": "bold"}
+        else:   
+            fontdict = {"size": self.plot_settings.fs + 2, "weight": "bold"}
 
         keys = [
             "rxx",
