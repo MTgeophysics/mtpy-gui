@@ -42,15 +42,15 @@ setup(name='MtPy_gui',
     author='Bennett Hoogenboom',
     author_email='bhooogenboom@usgs.gov',
     install_requires=[
-        'MtPy', 
+        'mtpy-v2', 
         'pyqt5', 
         'qdarkstyle', 
         'pyvistaqt'
     ],
-    entry_points = {
-         'console_scripts':[
-             'MtPy_gui=mtpy_gui:main'
-         ],
-     }
+    #entry_points = {
+    #     'console_scripts':[
+    #         'MtPy_gui=mtpy_gui:main'
+    #     ],
+    # }
 )
 
