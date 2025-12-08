@@ -3,7 +3,7 @@
 import sys
 # Test Python's version
 major, minor = sys.version_info[0:2]
-if ((major, minor) < (3, 5)) or (major, minor) > (3, 9):
+if ((major, minor) < (3, 5)) or (major, minor) > (3, 13):
     sys.stderr.write('\nPython 3.5 to 3.8 is needed to use this package\n')
     sys.exit(1)
 
