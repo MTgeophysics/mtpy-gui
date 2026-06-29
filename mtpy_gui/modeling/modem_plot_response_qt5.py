@@ -231,11 +231,11 @@ class ModEMPlotResponse(QtWidgets.QMainWindow):
             np.where(
                 (
                     self.plot_response.modem_data.station_locations.survey
-                    == self.plot_response.station.split(".")[0]
+                    == self.plot_response.station.split("/")[0]
                 )
                 & (
                     self.plot_response.modem_data.station_locations.station
-                    == self.plot_response.station.split(".")[1]
+                    == self.plot_response.station.split("/")[1]
                 )
             )[0][0]
         )
@@ -291,7 +291,7 @@ class ModEMPlotResponse(QtWidgets.QMainWindow):
         )
 
         # fill list of stations
-        station_list = list(sorted(self.plot_response.modem_data.keys()))
+        station_list = list(sorted([s.replace("surveys", "").replace("stations/", "") for s in self.plot_response.modem_data.station_paths]))
         self.plot_response.list_widget.clear()
         for station in station_list:
             self.plot_response.list_widget.addItem(station)
@@ -324,7 +324,7 @@ class ModEMPlotResponse(QtWidgets.QMainWindow):
         self.plot_response.modem_data.remove_station(rs.checked_stations)
 
         # fill list of stations
-        station_list = list(sorted(self.plot_response.modem_data.keys()))
+        station_list = list(sorted([s.replace("surveys", "").replace("stations/", "") for s in self.plot_response.modem_data.station_paths]))
         self.plot_response.list_widget.clear()
         for station in station_list:
             self.plot_response.list_widget.addItem(station)

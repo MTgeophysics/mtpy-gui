@@ -118,7 +118,7 @@ class PlotResponses(QtWidgets.QWidget):
         self.dirpath = self._data_fn.parent
 
         # fill list of stations
-        station_list = list(sorted(self.modem_data.keys()))
+        station_list = list(sorted([s.replace("surveys/", "").replace("stations/", "") for s in self.modem_data.station_paths]))
         self.list_widget.clear()
         for station in station_list:
             self.list_widget.addItem(station)
@@ -463,10 +463,11 @@ class PlotResponses(QtWidgets.QWidget):
         if self.station is None:
             return
 
-        z_obj = self.modem_data[self.station].Z
-        t_obj = self.modem_data[self.station].Tipper
-        self.plot_tipper = self.modem_data[self.station].has_tipper()
-        self.plot_z = self.modem_data[self.station].has_impedance()
+        mt_obj = self.modem_data.get_station(self.station, as_mt=True)
+        z_obj = mt_obj.Z
+        t_obj = mt_obj.Tipper
+        self.plot_tipper = mt_obj.has_tipper()
+        self.plot_z = mt_obj.has_impedance()
         h_ratio = [1.5, 1, 0.5]
 
         plt.rcParams["font.size"] = self.plot_settings.fs\
@@ -712,10 +713,11 @@ class PlotResponses(QtWidgets.QWidget):
                     pass
 
             ax.set_xscale("log", nonpositive="clip")
+            periods = self.modem_data.get_periods()
             ax.set_xlim(
-                xmin=10 ** (np.floor(np.log10(self.modem_data[self.station].period[0])))
+                xmin=10 ** (np.floor(np.log10(periods.min())))
                 * 1.01,
-                xmax=10 ** (np.ceil(np.log10(self.modem_data[self.station].period[-1])))
+                xmax=10 ** (np.ceil(np.log10(periods.max())))
                 * 0.99,
             )
             ax.grid(True, alpha=0.25)
@@ -726,10 +728,11 @@ class PlotResponses(QtWidgets.QWidget):
             self.resp_station = self.station.replace("data", self._resp_survey)
             try:
                 # find locations where points have been masked
-                if self.modem_resp[self.resp_station].has_impedance():
-                    resp_z_obj = self.modem_resp[self.resp_station].Z
+                resp_obj = self.modem_resp.get_station(self.resp_station, as_mt=True)
+                if resp_obj.has_impedance():
+                    resp_z_obj = resp_obj.Z
 
-                    z_index = np.where(np.in1d(z_obj.period, resp_z_obj.period))
+                    z_index = np.where(np.isin(z_obj.period, resp_z_obj.period))
                     with np.errstate(divide="ignore", invalid="ignore"):
                         resp_z_err = np.nan_to_num(
                             (z_obj.z[z_index] - resp_z_obj.z)
@@ -747,12 +750,13 @@ class PlotResponses(QtWidgets.QWidget):
                     rms_yy = resp_z_err[nzyy_r, 1, 1].std()
 
                     if self.plot_z:
-                        if not self.modem_resp[self.resp_station].has_impedance():
+                        
+                        if not resp_obj.has_impedance():
                             print(f"No Impedance in Response for {self.resp_station}")
 
-                if self.modem_resp[self.resp_station].has_tipper():
-                    resp_t_obj = self.modem_resp[self.resp_station].Tipper
-                    t_index = np.where(np.in1d(t_obj.period, resp_t_obj.period))
+                if resp_obj.has_tipper():
+                    resp_t_obj = resp_obj.Tipper
+                    t_index = np.where(np.isin(t_obj.period, resp_t_obj.period))
                     with np.errstate(divide="ignore", invalid="ignore"):
                         resp_t_err = np.nan_to_num(
                             (t_obj.tipper[t_index] - resp_t_obj.tipper)
@@ -766,7 +770,7 @@ class PlotResponses(QtWidgets.QWidget):
                     rms_ty = resp_t_err[nty_r, 0, 1].std()
 
                     if self.plot_tipper:
-                        if not self.modem_resp[self.resp_station].has_tipper():
+                        if not resp_obj.has_tipper():
                             print(f"No Tipper in Response for {self.resp_station}")
             except KeyError:
                 print(f"Could not find {self.resp_station} in .resp file")
@@ -775,7 +779,7 @@ class PlotResponses(QtWidgets.QWidget):
 
             # --> make key word dictionaries for plotting
 
-            if self.modem_resp[self.resp_station].has_impedance():
+            if resp_obj.has_impedance():
                 # plot resistivity
                 for ax, comp, ii, rms in zip(
                     self.ax_list[0:4],
@@ -811,7 +815,7 @@ class PlotResponses(QtWidgets.QWidget):
                     )
 
             # plot tipper
-            if self.modem_resp[self.resp_station].has_tipper():
+            if resp_obj.has_tipper():
                 rertx = plot_errorbar(
                     axtxr,
                     resp_t_obj.period[ntx_r],
