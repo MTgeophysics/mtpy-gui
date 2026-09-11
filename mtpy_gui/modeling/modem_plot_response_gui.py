@@ -328,23 +328,29 @@ class PlotResponses(QtWidgets.QWidget):
     def apply_interpolation(self):
         print(f"{'='*10} interpolating {self.station} {'='*10}")
 
-        self.modem_data[self.station] = self.modem_data[self.station].interpolate(
-            self.modem_periods, bounds_error=False
+        self.modem_data.add_station(
+            self.modem_data.get_station(
+                self.station, as_mt=True
+                ).interpolate(
+                    self.periods,
+                    bounds_error=True)
         )
 
         self.plot()
 
     def apply_undo(self):
-        self.modem_data[self.station] = self._modem_data_copy[self.station].copy()
+        self.modem_data.add_station(self._modem_data_copy.get_station(self.station))
         self.plot()
 
     def set_phase_flip_comp(self):
         self.phase_flip_comp = str(self.flip_phase_combo.currentText()).lower()
 
     def apply_flip_phase(self):
-        self.modem_data[self.station].flip_phase(
+        mt_obj = self.modem_data.get_station(self.station)
+        mt_obj.flip_phase(
             **{self.phase_flip_comp: True, "inplace": True}
         )
+        self.modem_data.add_station(mt_obj)
         self.plot()
 
     def set_error_comp(self):
@@ -365,11 +371,11 @@ class PlotResponses(QtWidgets.QWidget):
         self.add_t_error_text.setText(f"{self.add_t_error:.2f}")
 
     def apply_add_error(self):
-        self.modem_data[self.station].add_model_error(
+        self.modem_data.add_station(self.modem_data.get_station(self.station, as_mt=True).add_model_error(
             [self.add_error_comp],
             z_value=self.add_z_error,
             t_value=self.add_t_error,
-        )
+        ))
         self.plot()
 
     def set_ss_comp(self):
@@ -394,7 +400,7 @@ class PlotResponses(QtWidgets.QWidget):
         elif self.ss_comp.lower() == "zy":
             kwargs["ss_y"] = self.static_shift
 
-        self.modem_data[self.station].remove_static_shift(**kwargs)
+        self.modem_data.add_station(self.modem_data.get_station(self.station, as_mt=True).remove_static_shift(**kwargs))
         self.plot()
 
     @property
