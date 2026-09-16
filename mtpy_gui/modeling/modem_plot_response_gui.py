@@ -119,7 +119,14 @@ class PlotResponses(QtWidgets.QWidget):
         self.dirpath = self._data_fn.parent
 
         # fill list of stations
-        station_list = list(sorted([s.replace("surveys/", "").replace("stations/", "") for s in self.modem_data.station_paths]))
+        station_list = list(
+            sorted(
+                [
+                    s.replace("surveys/", "").replace("stations/", "")
+                    for s in self.modem_data.station_paths
+                ]
+            )
+        )
         self.list_widget.clear()
         for station in station_list:
             self.list_widget.addItem(station)
@@ -375,9 +382,7 @@ class PlotResponses(QtWidgets.QWidget):
     def apply_interpolation(self):
         print(f"{'='*10} interpolating {self.station} {'='*10}")
         self._update_station(
-            lambda mt_obj: mt_obj.interpolate(
-                self.modem_periods, bounds_error=False
-            )
+            lambda mt_obj: mt_obj.interpolate(self.modem_periods, bounds_error=False)
         )
 
         self.plot()
@@ -522,11 +527,10 @@ class PlotResponses(QtWidgets.QWidget):
         self.plot_z = mt_obj.has_impedance()
         h_ratio = [1.5, 1, 0.5]
 
-        plt.rcParams["font.size"] = self.plot_settings.fs\
-        
+        plt.rcParams["font.size"] = self.plot_settings.fs
         if mpl_version <= "3.6":
             fontdict = {"fontsize": self.plot_settings.fs + 2, "fontweight": "bold"}
-        else:   
+        else:
             fontdict = {"size": self.plot_settings.fs + 2, "weight": "bold"}
 
         keys = [
@@ -767,10 +771,8 @@ class PlotResponses(QtWidgets.QWidget):
             ax.set_xscale("log", nonpositive="clip")
             periods = self.modem_data.get_periods()
             ax.set_xlim(
-                xmin=10 ** (np.floor(np.log10(periods.min())))
-                * 1.01,
-                xmax=10 ** (np.ceil(np.log10(periods.max())))
-                * 0.99,
+                xmin=10 ** (np.floor(np.log10(periods.min()))) * 1.01,
+                xmax=10 ** (np.ceil(np.log10(periods.max()))) * 0.99,
             )
             ax.grid(True, alpha=0.25)
 
@@ -802,7 +804,7 @@ class PlotResponses(QtWidgets.QWidget):
                     rms_yy = resp_z_err[nzyy_r, 1, 1].std()
 
                     if self.plot_z:
-                        
+
                         if not resp_obj.has_impedance():
                             print(f"No Impedance in Response for {self.resp_station}")
 
@@ -1007,12 +1009,12 @@ class PlotResponses(QtWidgets.QWidget):
                 ]
 
         if button == 1:
-            mt_obj._transfer_function.transfer_function.loc[
-                self._comp_dict
-            ][p_index] = (np.nan + 1j * np.nan)
-            mt_obj._transfer_function.transfer_function_model_error.loc[self._comp_dict][
+            mt_obj._transfer_function.transfer_function.loc[self._comp_dict][
                 p_index
-            ] = np.nan
+            ] = (np.nan + 1j * np.nan)
+            mt_obj._transfer_function.transfer_function_model_error.loc[
+                self._comp_dict
+            ][p_index] = np.nan
             self._save_station(mt_obj)
 
             # plot the points as masked
@@ -1042,18 +1044,18 @@ class PlotResponses(QtWidgets.QWidget):
             # make sure just checking the top plots
 
             # put the new error into the error array
-            err = mt_obj._transfer_function.transfer_function_model_error.loc[self._comp_dict][
-                p_index
-            ]
+            err = mt_obj._transfer_function.transfer_function_model_error.loc[
+                self._comp_dict
+            ][p_index]
             if self._key == "tip":
                 err = err + self.add_t_error
 
             elif self._key == "z":
                 err = err * self.add_z_error
 
-            mt_obj._transfer_function.transfer_function_model_error.loc[self._comp_dict][
-                p_index
-            ] = err
+            mt_obj._transfer_function.transfer_function_model_error.loc[
+                self._comp_dict
+            ][p_index] = err
             self._save_station(mt_obj)
             # make error bar array
             try:
@@ -1158,9 +1160,7 @@ class PlotResponses(QtWidgets.QWidget):
         fmin = min([period_01, period_02])
         fmax = max([period_01, period_02])
         mt_obj = self._get_station()
-        prange = np.where(
-            (mt_obj.period >= fmin) & (mt_obj.period <= fmax)
-        )
+        prange = np.where((mt_obj.period >= fmin) & (mt_obj.period <= fmax))
 
         return prange[0]
 
@@ -1178,19 +1178,15 @@ class PlotResponses(QtWidgets.QWidget):
             values_01 = mt_obj.Z.resistivity[
                 f_idx, self._comp_index_x, self._comp_index_y
             ]
-            values_02 = mt_obj.Z.phase[
-                f_idx, self._comp_index_x, self._comp_index_y
-            ]
+            values_02 = mt_obj.Z.phase[f_idx, self._comp_index_x, self._comp_index_y]
 
         elif self._key == "tip":
-            values_01 = (
-                mt_obj.Tipper.tipper[f_idx, self._comp_index_x, self._comp_index_y]
-                .real
-            )
-            values_02 = (
-                mt_obj.Tipper.tipper[f_idx, self._comp_index_x, self._comp_index_y]
-                .imag
-            )
+            values_01 = mt_obj.Tipper.tipper[
+                f_idx, self._comp_index_x, self._comp_index_y
+            ].real
+            values_02 = mt_obj.Tipper.tipper[
+                f_idx, self._comp_index_x, self._comp_index_y
+            ].imag
 
         self._ax.plot(
             period,
@@ -1215,9 +1211,9 @@ class PlotResponses(QtWidgets.QWidget):
         self._ax2.figure.canvas.draw()
 
         # set to nan
-        mt_obj._transfer_function.transfer_function.loc[
-            self._comp_dict
-        ][f_idx] = (np.nan + 1j * np.nan)
+        mt_obj._transfer_function.transfer_function.loc[self._comp_dict][f_idx] = (
+            np.nan + 1j * np.nan
+        )
         mt_obj._transfer_function.transfer_function_model_error.loc[self._comp_dict][
             f_idx
         ] = np.nan

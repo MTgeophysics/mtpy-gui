@@ -9,6 +9,7 @@ The functionality is quite simple at the moment
 
 JP 2016
 """
+
 #
 # ==============================================================================
 # Imports
@@ -28,7 +29,6 @@ from mtpy_gui.modeling.modem_plot_response_gui import PlotResponses
 from mtpy_gui.modeling.response_plot_settings import PlotSettings
 from mtpy_gui.modeling.get_stations import GetStations
 from mtpy_gui.modeling.plot_stations import PlotStations
-
 
 # ==============================================================================
 
@@ -286,7 +286,14 @@ class ModEMPlotResponse(QtWidgets.QMainWindow):
         )
 
         # fill list of stations
-        station_list = list(sorted([s.replace("surveys", "").replace("stations/", "") for s in self.plot_response.modem_data.station_paths]))
+        station_list = list(
+            sorted(
+                [
+                    s.replace("surveys", "").replace("stations/", "")
+                    for s in self.plot_response.modem_data.station_paths
+                ]
+            )
+        )
         self.plot_response.list_widget.clear()
         for station in station_list:
             self.plot_response.list_widget.addItem(station)
@@ -296,9 +303,7 @@ class ModEMPlotResponse(QtWidgets.QMainWindow):
 
         self.plot_response.plot()
 
-        self.station_plot.redraw_plot(
-            self.plot_response.modem_data.station_locations
-        )
+        self.station_plot.redraw_plot(self.plot_response.modem_data.station_locations)
 
     def remove_station(self):
         """
@@ -310,9 +315,7 @@ class ModEMPlotResponse(QtWidgets.QMainWindow):
         """
 
         rs = GetStations(
-            stations=list(
-                self.plot_response.modem_data.station_locations.station
-            )
+            stations=list(self.plot_response.modem_data.station_locations.station)
         )
         rs.exec_()
 
@@ -320,7 +323,14 @@ class ModEMPlotResponse(QtWidgets.QMainWindow):
             self.plot_response.modem_data.remove_station(f"data/{station}")
 
         # fill list of stations
-        station_list = list(sorted([s.replace("surveys", "").replace("stations/", "") for s in self.plot_response.modem_data.station_paths]))
+        station_list = list(
+            sorted(
+                [
+                    s.replace("surveys", "").replace("stations/", "")
+                    for s in self.plot_response.modem_data.station_paths
+                ]
+            )
+        )
         self.plot_response.list_widget.clear()
         for station in station_list:
             self.plot_response.list_widget.addItem(station)
@@ -330,9 +340,7 @@ class ModEMPlotResponse(QtWidgets.QMainWindow):
 
         self.plot_response.plot()
 
-        self.station_plot.redraw_plot(
-            self.plot_response.modem_data.station_locations
-        )
+        self.station_plot.redraw_plot(self.plot_response.modem_data.station_locations)
 
     def get_resp_fn(self):
         """
@@ -381,9 +389,7 @@ class ModEMPlotResponse(QtWidgets.QMainWindow):
 
         help_string = "\n".join(ll)
 
-        QtWidgets.QMessageBox.information(
-            self.centralWidget, "Help", help_string
-        )
+        QtWidgets.QMessageBox.information(self.centralWidget, "Help", help_string)
 
 
 # ==============================================================================
