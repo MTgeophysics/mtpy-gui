@@ -15,6 +15,7 @@ Created on Fri Jan 15 11:47:37 2021
 # ==============================================================================
 # standard imports
 from pathlib import Path
+from typing import Callable
 
 try:
     from PyQt5 import QtCore, QtWidgets, QtGui
@@ -35,7 +36,7 @@ import matplotlib.widgets as mplwidgets
 from matplotlib.lines import Line2D
 from matplotlib.collections import LineCollection
 
-from mtpy import MTData
+from mtpy import MT, MTData
 from mtpy.imaging.mtplot_tools.plotters import (
     plot_errorbar,
     plot_resistivity,
@@ -107,7 +108,7 @@ class PlotResponses(QtWidgets.QWidget):
 
         # create new modem data object
         self.modem_data = MTData()
-        self.modem_data.from_modem(self._data_fn)
+        self.modem_data.from_modem(self._data_fn, survey="data")
         self.periods = self.modem_data.get_periods()
 
         # make a back up copy that will be unchanged
@@ -307,6 +308,52 @@ class PlotResponses(QtWidgets.QWidget):
         print("{0} changed".format(self.data_fn))
         self.data_fn = Path(self._data_fn)
 
+    def _get_station(self, station_key: str | None = None) -> MT:
+        """Return the selected station as an MT object.
+
+        Parameters
+        ----------
+        station_key : str, optional
+            MTData station path. The currently selected station is used when
+            omitted.
+
+        Returns
+        -------
+        MT
+            Reconstructed station transfer-function object.
+        """
+        return self.modem_data.get_station(station_key or self.station, as_mt=True)
+
+    def _update_station(self, update: Callable[[MT], MT | None]) -> None:
+        """Apply a station edit and write its dataset back to MTData.
+
+        Parameters
+        ----------
+        update : callable
+            Function that mutates the selected MT object in place or returns
+            a replacement MT object.
+        """
+        station_path = self.modem_data._resolve_station_path(self.station)
+        mt_obj = self._get_station(station_path)
+        updated_mt = update(mt_obj) or mt_obj
+        self._save_station(updated_mt, station_path)
+
+    def _save_station(self, mt_obj: MT, station_path: str | None = None) -> None:
+        """Write an MT object back to its existing MTData station path."""
+        station_path = station_path or self.modem_data._resolve_station_path(
+            self.station
+        )
+        station_ds = self.modem_data.get_station(station_path)
+        updated_ds = self.modem_data._extract_station_dataset(mt_obj)
+        updated_ds.attrs.update(station_ds.attrs)
+        self.modem_data._set_station_dataset(station_path, updated_ds)
+
+    def _restore_station(self) -> None:
+        """Restore the selected station from the unedited MTData copy."""
+        station_path = self.modem_data._resolve_station_path(self.station)
+        original_ds = self._modem_data_copy.get_station(station_path).copy(deep=True)
+        self.modem_data._set_station_dataset(station_path, original_ds)
+
     def save_edits(self):
         """
         save edits to another file
@@ -327,23 +374,26 @@ class PlotResponses(QtWidgets.QWidget):
 
     def apply_interpolation(self):
         print(f"{'='*10} interpolating {self.station} {'='*10}")
-
-        self.modem_data[self.station] = self.modem_data[self.station].interpolate(
-            self.modem_periods, bounds_error=False
+        self._update_station(
+            lambda mt_obj: mt_obj.interpolate(
+                self.modem_periods, bounds_error=False
+            )
         )
 
         self.plot()
 
     def apply_undo(self):
-        self.modem_data[self.station] = self._modem_data_copy[self.station].copy()
+        self._restore_station()
         self.plot()
 
     def set_phase_flip_comp(self):
         self.phase_flip_comp = str(self.flip_phase_combo.currentText()).lower()
 
     def apply_flip_phase(self):
-        self.modem_data[self.station].flip_phase(
-            **{self.phase_flip_comp: True, "inplace": True}
+        self._update_station(
+            lambda mt_obj: mt_obj.flip_phase(
+                **{self.phase_flip_comp: True, "inplace": True}
+            )
         )
         self.plot()
 
@@ -365,10 +415,12 @@ class PlotResponses(QtWidgets.QWidget):
         self.add_t_error_text.setText(f"{self.add_t_error:.2f}")
 
     def apply_add_error(self):
-        self.modem_data[self.station].add_model_error(
-            [self.add_error_comp],
-            z_value=self.add_z_error,
-            t_value=self.add_t_error,
+        self._update_station(
+            lambda mt_obj: mt_obj.add_model_error(
+                [self.add_error_comp],
+                z_value=self.add_z_error,
+                t_value=self.add_t_error,
+            )
         )
         self.plot()
 
@@ -394,7 +446,7 @@ class PlotResponses(QtWidgets.QWidget):
         elif self.ss_comp.lower() == "zy":
             kwargs["ss_y"] = self.static_shift
 
-        self.modem_data[self.station].remove_static_shift(**kwargs)
+        self._update_station(lambda mt_obj: mt_obj.remove_static_shift(**kwargs))
         self.plot()
 
     @property
@@ -929,18 +981,15 @@ class PlotResponses(QtWidgets.QWidget):
             data_period = event.xdata
             data_value = event.ydata
             button = event.button
+        mt_obj = self._get_station()
         # get the indicies where the data point has been edited
         try:
-            p_index = np.where(self.modem_data[self.station].period == data_period)[0][
-                0
-            ]
+            p_index = np.where(mt_obj.period == data_period)[0][0]
         except IndexError:
             return
 
         if self._key == "tip":
-            data_value_2 = self.modem_data[self.station].tipper.loc[self._comp_dict][
-                p_index
-            ]
+            data_value_2 = mt_obj.tipper.loc[self._comp_dict][p_index]
 
             if self._ax_index % 2 == 0:
                 data_value_2 = data_value_2.imag
@@ -949,24 +998,22 @@ class PlotResponses(QtWidgets.QWidget):
 
         elif self._key == "z":
             if self._ax_index < 4:
-                data_value_2 = self.modem_data[self.station].Z.phase[
+                data_value_2 = mt_obj.Z.phase[
                     p_index, self._comp_index_x, self._comp_index_y
                 ]
             elif self._ax_index >= 4:
-                data_value_2 = self.modem_data[self.station].Z.resistivity[
+                data_value_2 = mt_obj.Z.resistivity[
                     p_index, self._comp_index_x, self._comp_index_y
                 ]
 
         if button == 1:
-            # mask the point in the data mt_dict
-            self.modem_data[self.station]._transfer_function.transfer_function.loc[
+            mt_obj._transfer_function.transfer_function.loc[
                 self._comp_dict
             ][p_index] = (np.nan + 1j * np.nan)
-            self.modem_data[
-                self.station
-            ]._transfer_function.transfer_function_model_error.loc[self._comp_dict][
+            mt_obj._transfer_function.transfer_function_model_error.loc[self._comp_dict][
                 p_index
             ] = np.nan
+            self._save_station(mt_obj)
 
             # plot the points as masked
             self._ax.plot(
@@ -995,9 +1042,7 @@ class PlotResponses(QtWidgets.QWidget):
             # make sure just checking the top plots
 
             # put the new error into the error array
-            err = self.modem_data[
-                self.station
-            ]._transfer_function.transfer_function_model_error.loc[self._comp_dict][
+            err = mt_obj._transfer_function.transfer_function_model_error.loc[self._comp_dict][
                 p_index
             ]
             if self._key == "tip":
@@ -1006,11 +1051,10 @@ class PlotResponses(QtWidgets.QWidget):
             elif self._key == "z":
                 err = err * self.add_z_error
 
-            self.modem_data[
-                self.station
-            ]._transfer_function.transfer_function_model_error.loc[self._comp_dict][
+            mt_obj._transfer_function.transfer_function_model_error.loc[self._comp_dict][
                 p_index
             ] = err
+            self._save_station(mt_obj)
             # make error bar array
             try:
                 e_index = event.ind[0]
@@ -1113,9 +1157,9 @@ class PlotResponses(QtWidgets.QWidget):
     def _get_frequency_range(self, period_01, period_02):
         fmin = min([period_01, period_02])
         fmax = max([period_01, period_02])
+        mt_obj = self._get_station()
         prange = np.where(
-            (self.modem_data[self.station].period >= fmin)
-            & (self.modem_data[self.station].period <= fmax)
+            (mt_obj.period >= fmin) & (mt_obj.period <= fmax)
         )
 
         return prange[0]
@@ -1125,27 +1169,26 @@ class PlotResponses(QtWidgets.QWidget):
         x2 = erelease.xdata
 
         f_idx = self._get_frequency_range(x1, x2)
+        mt_obj = self._get_station()
 
-        period = self.modem_data[self.station].period[f_idx]
+        period = mt_obj.period[f_idx]
 
         # plot
         if self._key == "z":
-            values_01 = self.modem_data[self.station].Z.resistivity[
+            values_01 = mt_obj.Z.resistivity[
                 f_idx, self._comp_index_x, self._comp_index_y
             ]
-            values_02 = self.modem_data[self.station].Z.phase[
+            values_02 = mt_obj.Z.phase[
                 f_idx, self._comp_index_x, self._comp_index_y
             ]
 
         elif self._key == "tip":
             values_01 = (
-                self.modem_data[self.station]
-                .Tipper.tipper[f_idx, self._comp_index_x, self._comp_index_y]
+                mt_obj.Tipper.tipper[f_idx, self._comp_index_x, self._comp_index_y]
                 .real
             )
             values_02 = (
-                self.modem_data[self.station]
-                .Tipper.tipper[f_idx, self._comp_index_x, self._comp_index_y]
+                mt_obj.Tipper.tipper[f_idx, self._comp_index_x, self._comp_index_y]
                 .imag
             )
 
@@ -1172,11 +1215,10 @@ class PlotResponses(QtWidgets.QWidget):
         self._ax2.figure.canvas.draw()
 
         # set to nan
-        self.modem_data[self.station]._transfer_function.transfer_function.loc[
+        mt_obj._transfer_function.transfer_function.loc[
             self._comp_dict
         ][f_idx] = (np.nan + 1j * np.nan)
-        self.modem_data[
-            self.station
-        ]._transfer_function.transfer_function_model_error.loc[self._comp_dict][
+        mt_obj._transfer_function.transfer_function_model_error.loc[self._comp_dict][
             f_idx
         ] = np.nan
+        self._save_station(mt_obj)

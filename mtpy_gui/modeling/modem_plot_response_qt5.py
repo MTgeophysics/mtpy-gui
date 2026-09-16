@@ -258,10 +258,7 @@ class ModEMPlotResponse(QtWidgets.QMainWindow):
             )
         )
 
-        self.plot_response.modem_data.to_modem_data(
-            data_filename=save_fn,
-            elevation=self.plot_response.modem_data.topography,
-        )
+        self.plot_response.modem_data.to_modem(data_filename=save_fn)
 
     def new_data_file(self):
         """build a new data file from scratch"""
@@ -283,11 +280,9 @@ class ModEMPlotResponse(QtWidgets.QMainWindow):
 
         fn_list = [Path(fn) for fn in fn_list]
 
-        self.plot_response.modem_data.add_station(
-            fn_list,
-            survey="data",
-            compute_model_error=True,
-            interpolate_periods=self.plot_response.modem_data.get_periods(),
+        self.plot_response.modem_data.add_stations(fn_list, survey_id="data")
+        self.plot_response.modem_data.interpolate(
+            self.plot_response.modem_data.get_periods(), bounds_error=False
         )
 
         # fill list of stations
@@ -321,7 +316,8 @@ class ModEMPlotResponse(QtWidgets.QMainWindow):
         )
         rs.exec_()
 
-        self.plot_response.modem_data.remove_station(rs.checked_stations)
+        for station in rs.checked_stations:
+            self.plot_response.modem_data.remove_station(f"data/{station}")
 
         # fill list of stations
         station_list = list(sorted([s.replace("surveys", "").replace("stations/", "") for s in self.plot_response.modem_data.station_paths]))
