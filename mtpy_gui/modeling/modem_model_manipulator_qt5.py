@@ -1233,7 +1233,7 @@ class ModelWidget(QtWidgets.QWidget):
         if has_cx:
             try:
                 cx_kwargs = {
-                    "crs": self.data_obj.utm_crs.to_string(),
+                    "crs": str(self.data_obj.utm_crs),
                     "source": self.cx_source,
                 }
                 if self.cx_zoom is not None:
